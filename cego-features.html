@@ -31,7 +31,7 @@
             left: 0;
             bottom: 0;
             width: 100%;
-            height: 0.5em;
+            height: 0.4em;
             background-color: #85a0ff;
             z-index: 3;
         }
@@ -41,7 +41,7 @@
             padding: 0px 0.7em;
         }
         .bpa-link-1{
-            margin-bottom: 1em;
+            margin-bottom: 1.8em;
         }
         .bpa-wrap-1 > .w-dyn-list{
             position: relative;
@@ -65,7 +65,7 @@
         }
 
         .bpa-grid-1:last-child{
-            margin-right: 0px;
+            margin-right: 1.2em;
         }
         .bpb-area-1:nth-child(even) .bpb-grid-1-1{
             order: 2;
@@ -75,6 +75,45 @@
         }
         .bpb-area-1:nth-child(even) .bpb-grid-1-3{
             order: 3;
+        }
+        .bpa-section-1{
+            transition: padding-top .3s linear, padding-bottom .3s linear;
+        }
+        .bpa-section-1.bpa-top-bar-fixed{
+            background-color: #EDF3FC;
+            padding-top: 2.2em;
+            padding-bottom: 0px;
+            overflow: hidden;
+        }
+        .bpa-wrap-grid{
+            margin-bottom: 0px;
+            align-items: stretch;
+        }
+        .bpa-wrap-shadows {
+            height: 100%;
+            width: 0px;
+            position: relative;
+        }
+        .bpa-shadows-1 {
+            height: 2em;
+            width: 2em;
+            box-shadow: -4px 10px 20px 25px #fff;
+        }
+
+        .bpa-top-bar-fixed .bpa-shadows-1{
+            box-shadow: -4px 10px 20px 25px #edf3fc;
+        }
+        @media screen and (max-width: 640px){
+            .bpa-grid-1 {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .bpa-link-1{
+                display: block;
+                width: 10em;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -397,7 +436,7 @@
             </div>
         </div>
     </div>
-    <div class="bpa-section-1">
+    <div class="bpa-section-1 bpa-top-bar-fixed">
         <div class="bpa-container-1">
             <div class="bpa-wrap-1">
                 <div class="w-dyn-list">
@@ -1212,6 +1251,7 @@
     <script>
         $(document).ready(function(){
             var active = true;
+
             $("[data-tabs]").each((i, el) => {
                 var title = $(el).find("[data-title]").text().toLowerCase()
                 title = title.replace(/ /g, "-")
@@ -1235,7 +1275,7 @@
                     active = true;
                     $(".bpa-wrap-grid").find("[data-target]").removeClass("active")
                     $(".bpa-wrap-grid").find("[data-target="+id+"]").addClass("active")
-                }, 600)
+                }, 500)
                 
                 return false
             })
@@ -1246,13 +1286,25 @@
             }
 
             var rect = el.getBoundingClientRect();
+            var landscape = (window.innerHeight || document.documentElement.clientHeight) < (window.innerWidth || document.documentElement.clientWidth)
 
-            return (
-                rect.top >= 0 &&
-                rect.left >= 0 &&
-                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && /* or $(window).height() */
-                rect.right <= (window.innerWidth || document.documentElement.clientWidth) /* or $(window).width() */
-            );
+            if(landscape){
+                var porcentage = (window.innerWidth || document.documentElement.clientWidth) > 900 ? rect.height / 2 : 0
+                return (
+                    rect.top >= 0 &&
+                    rect.left >= 0 &&
+                    rect.top + porcentage <= (window.innerHeight || document.documentElement.clientHeight) &&
+                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                );
+            }else{
+                var porcentage = (window.innerWidth || document.documentElement.clientWidth) > 600 ? 1 : 1.3
+                return (
+                    rect.top >= 0 &&
+                    rect.left >= 0 &&
+                    rect.bottom / porcentage <= (window.innerHeight || document.documentElement.clientHeight) &&
+                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                );  
+            }
         }
 
         var tabActive = ""
@@ -1281,6 +1333,18 @@
                         }
                     }
                 })
+
+                var topBarScroll = $(".bpa-section-1").position().top
+                
+                var topBar = $(".bpa-section-1").offset()
+                var posY = topBar.top - $(window).scrollTop();
+
+                if(posY < 100){
+                    $(".bpa-section-1").addClass("bpa-top-bar-fixed")
+                }else{
+                    $(".bpa-section-1").removeClass("bpa-top-bar-fixed")
+                }
+
                 
                 
             }
