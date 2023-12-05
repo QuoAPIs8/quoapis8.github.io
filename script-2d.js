@@ -1280,9 +1280,11 @@ function init(){
             // console.log(this.studio[t.toLowerCase()].view)
         },
         getSrc(type, item){
-            let img = item.image
+            let img = null
             if (this.studio[type].view && item[this.studio[type].view]) {
                 img = item[this.studio[type].view]
+            } else if(!this.studio[type].view ){
+                img = item.image
             }
             return img
         },
