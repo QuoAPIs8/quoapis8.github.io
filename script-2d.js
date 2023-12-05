@@ -763,8 +763,6 @@ function init(){
     studio.exterior.view = ""
     studio.interior.view = ""
 
-    console.log(studio)
-
     return {
         sections : sections, studio : studio, studioItems : [], active : true,  shipping : 0, customer : customer, upgradesV : "", servicesV : "", interiorV : "", layoutV : "", exteriorV : "", valid : true, currency : "USD", slideActive : 0, summarySlide : slidesT.length - 1, installationSlide : slidesT.length - 2, show_furniture : true,
         await : true,
@@ -1279,7 +1277,7 @@ function init(){
 
             this.studio[t.toLowerCase()].view = typeView
 
-            console.log(this.studio[t.toLowerCase()].view)
+            // console.log(this.studio[t.toLowerCase()].view)
         },
         getSrc(type, item){
             let img = item.image
@@ -1290,7 +1288,6 @@ function init(){
         },
         getShowBtnView(type, slug){
             let exist = []
-
             if(!slug){
                 let vs = views.filter( (_, v) => {
                     return v.type.toLowerCase() == type
@@ -1317,6 +1314,7 @@ function init(){
             exist = this.studio[type.toLowerCase()].selected.filter((i) => {
                 return i[typeView]
             })
+
             return exist.length > 0
         }
     }
