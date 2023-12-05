@@ -1283,9 +1283,10 @@ function init(){
             let img = null
             if (this.studio[type].view && item[this.studio[type].view]) {
                 img = item[this.studio[type].view]
-            } else if(!this.studio[type].view ){
+            } else if( !this.studio[type].view ){
                 img = item.image
             }
+            console.log(this.studio[type], img)
             return img
         },
         getShowBtnView(type, slug){
