@@ -468,24 +468,26 @@ function init(){
         slug : "",
         levels : [],
     }
+    $("[data-view='exterior']").find(".div-block-359").html("")
+    $("[data-view='interior']").find(".div-block-359").html("")
     let views = $(".views").map( (_, v) => {
         let view = $(v).data()
 
         $("[data-view='"+view.type.toLowerCase()+"']").find(".div-block-359").append(`
-        <div x-show="getShowBtnView('${view.type}', 'view-${view.slug}')" class="view-item"><button class="view-name view-${view.slug}" @click="setView(event, '${view.type}', 'view-${view.slug}')" type="button">${view.name}</button></div>
+            <div x-show="getShowBtnView('${view.type}', 'view-${view.slug}')" class="view-item"><button class="view-name view-${view.slug}" @click="setView(event, '${view.type}', 'view-${view.slug}')" type="button">${view.name}</button></div>
         `)
         
         return view
     })
-    
 
+    views.sort((a, b) => {
+        return a.order - b.order
+    })
+    
     setTimeout(() => { $(".div-block-257").removeClass("hidden") }, 300)
     $(".models").each(function(){
-        //sections.m.push({type : $(this).data("type"), name : $(this).data("name"), slug : $(this).data("slug"), price : $(this).data("price"), image : $(this).data("image")})
         sections.m.push($(this).data())
     })
-
-
 
     $('.rendered-sections').each(function(){
         var data = $(this).data()
@@ -757,11 +759,19 @@ function init(){
                 selected: sections[sec]
             }}
     }
-
-    studio.exterior.img_view = ""
-    studio.interior.img_view = ""
-    studio.exterior.view = ""
-    studio.interior.view = ""
+    let baseViews = ['interior', 'exterior']
+    for (let view of baseViews) {
+        studio[view].img_view = ""
+        studio[view].view = ""
+        if(studio.model[view+"View"]){
+            let typeView = ("view-"+studio.model[view+"View"]).split("-").map(str => str.charAt(0).toUpperCase() + str.slice(1)).join("")
+            typeView = typeView.charAt(0).toLowerCase() + typeView.slice(1)
+            studio[view].view = typeView
+            studio[view].img_view = studio.model[typeView]
+            studio[view].base_image = studio.model[typeView]
+            $(".view-name.view-"+studio.model[view+"View"]).addClass("is-active")
+        }
+    }
 
     return {
         sections : sections, studio : studio, studioItems : [], active : true,  shipping : 0, customer : customer, upgradesV : "", servicesV : "", interiorV : "", layoutV : "", exteriorV : "", valid : true, currency : "USD", slideActive : 0, summarySlide : slidesT.length - 1, installationSlide : slidesT.length - 2, show_furniture : true,
@@ -1276,8 +1286,6 @@ function init(){
             }
 
             this.studio[t.toLowerCase()].view = typeView
-
-            // console.log(this.studio[t.toLowerCase()].view)
         },
         getSrc(type, item){
             let img = null
@@ -1286,10 +1294,14 @@ function init(){
             } else if( !this.studio[type].view ){
                 img = item.image
             }
-            console.log(this.studio[type], img)
             return img
         },
         getShowBtnView(type, slug){
+            let t = type.toLowerCase()
+            if(this.studio.model[t+"View"] === "" ){
+                return false;
+            }
+
             let exist = []
             if(!slug){
                 let vs = views.filter( (_, v) => {
@@ -1301,14 +1313,14 @@ function init(){
                     let typeView = vSlug.split("-").map(str => str.charAt(0).toUpperCase() + str.slice(1)).join("")
                     typeView = typeView.charAt(0).toLowerCase() + typeView.slice(1)
 
-                    let inExist = this.studio[type.toLowerCase()].selected.filter((i) => {
+                    let inExist = this.studio[t].selected.filter((i) => {
                         return i[typeView] !== undefined && i[typeView] !== ""
                     })
 
-                    exist = exist.concat(inExist)
+                    v.show = inExist.length > 0
                 })
 
-                return exist.length > 0
+                return vs.filter((_, v) => v.show).length > 1
             }
 
             let typeView = slug.split("-").map(str => str.charAt(0).toUpperCase() + str.slice(1)).join("")
