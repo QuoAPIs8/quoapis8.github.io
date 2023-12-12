@@ -97,6 +97,9 @@ const lookup = {
     "navajo-960" : {
         "builder": "meka-modular"
     },
+    "studio-kit" : {
+        "builder": "meka-modular"
+    },
 }
 
 var levels = {
@@ -492,25 +495,29 @@ function init(){
     $('.rendered-sections').each(function(){
         var data = $(this).data()
         var type = data.type.toLowerCase()
-        var description = $(this).closest(".w-dyn-item").find('.longer-description-html').html()
-        var st = data.subtype
-        var exist_subtype = sections[type].find(function(item){
-            return item.subtype == st && item.active == true
-        })
-        var selection = data.selection.toLowerCase()
-        selection = (selection.includes("simple") ? "simple" : "multiple")
-        var active = !exist_subtype && selection == "simple" && data.parent == ""
-        var labelLevels = []
+        if(type){
+            var description = $(this).closest(".w-dyn-item").find('.longer-description-html').html()
+            var st = data.subtype
 
-        //var itt = {type : data.type, subtype : data.subtype, namesubtype : data.namesubtype, name : data.name, slug : data.slug, price : data.price,  image : data.image, thumbnail : data.thumbnail, description, active, show : false, order : data.order, selection : selection, object : data.object, group : data.group, material : data.material, function : data.function, parent : data.parent, childs : [], activeLevel : [] }
-        var itt = data
-        itt.description = description
-        itt.active = active
-        itt.show = false,
-            itt.selection = selection
-        itt.childs = []
-        itt.activeLevel = []
-        sections[type].push(itt)
+            var exist_subtype = sections[type].find(function(item){
+                return item.subtype == st && item.active == true
+            })
+            
+            var selection = data.selection.toLowerCase()
+            selection = (selection.includes("simple") ? "simple" : "multiple")
+            var active = !exist_subtype && selection == "simple" && data.parent == ""
+            var labelLevels = []
+
+            //var itt = {type : data.type, subtype : data.subtype, namesubtype : data.namesubtype, name : data.name, slug : data.slug, price : data.price,  image : data.image, thumbnail : data.thumbnail, description, active, show : false, order : data.order, selection : selection, object : data.object, group : data.group, material : data.material, function : data.function, parent : data.parent, childs : [], activeLevel : [] }
+            var itt = data
+            itt.description = description
+            itt.active = active
+            itt.show = false,
+                itt.selection = selection
+            itt.childs = []
+            itt.activeLevel = []
+            sections[type].push(itt)
+        }
     })
 
     $(".installation").each(function(){
@@ -1310,27 +1317,30 @@ function init(){
 
                 vs.map((_, v) => {
                     let vSlug = "view-"+v.slug 
+                    
                     let typeView = vSlug.split("-").map(str => str.charAt(0).toUpperCase() + str.slice(1)).join("")
                     typeView = typeView.charAt(0).toLowerCase() + typeView.slice(1)
 
-                    let inExist = this.studio[t].selected.filter((i) => {
-                        return i[typeView] !== undefined && i[typeView] !== ""
-                    })
+                    // let inExist = this.studio[t].selected.filter((i) => {
+                    //     return i[typeView] !== undefined && i[typeView] !== ""
+                    // })
 
-                    v.show = inExist.length > 0
+                    v.show = this.studio.model[typeView] !== ""  //inExist.length > 0
                 })
 
                 return vs.filter((_, v) => v.show).length > 1
             }
 
+            
+
             let typeView = slug.split("-").map(str => str.charAt(0).toUpperCase() + str.slice(1)).join("")
             typeView = typeView.charAt(0).toLowerCase() + typeView.slice(1)
 
-            exist = this.studio[type.toLowerCase()].selected.filter((i) => {
-                return i[typeView]
-            })
+            // exist = this.studio[type.toLowerCase()].selected.filter((i) => {
+            //     return i[typeView]
+            // })
 
-            return exist.length > 0
+            return this.studio.model[typeView] !== "" //exist.length > 0
         }
     }
 }
