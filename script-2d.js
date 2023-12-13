@@ -98,10 +98,10 @@ const lookup = {
         "builder": "meka-modular"
     },
     "studio-kit" : {
-        "builder": "meka-modular"
+        "builder": "lim-living"
     },
     "mini-kit" : {
-        "builder": "meka-modular"
+        "builder": "lim-living"
     },
 }
 
