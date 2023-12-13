@@ -100,6 +100,9 @@ const lookup = {
     "studio-kit" : {
         "builder": "meka-modular"
     },
+    "mini-kit" : {
+        "builder": "meka-modular"
+    },
 }
 
 var levels = {
