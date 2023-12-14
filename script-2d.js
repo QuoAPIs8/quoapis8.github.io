@@ -96,13 +96,7 @@ const lookup = {
     },
     "navajo-960" : {
         "builder": "meka-modular"
-    },
-    "studio-kit" : {
-        "builder": "lim-living"
-    },
-    "mini-kit" : {
-        "builder": "lim-living"
-    },
+    }
 }
 
 var levels = {
@@ -121,6 +115,11 @@ const getModelName = thePath => thePath.substring(thePath.lastIndexOf('/') + 1)
 
 function getBuilder () {
     const model = getModelName(window.location.pathname)
+
+    if (!lookup[model]) {
+        lookup[model] = { builder: modelBuilder }
+    }
+
     return lookup[model].builder;
 }
 
@@ -474,6 +473,7 @@ function init(){
         slug : "",
         levels : [],
     }
+    let slides = []
     $("[data-view='exterior']").find(".div-block-359").html("")
     $("[data-view='interior']").find(".div-block-359").html("")
     let views = $(".views").map( (_, v) => {
@@ -486,7 +486,7 @@ function init(){
         return view
     })
 
-    views.sort((a, b) => {
+    views = views.sort((a, b) => {
         return a.order - b.order
     })
     
@@ -497,29 +497,33 @@ function init(){
 
     $('.rendered-sections').each(function(){
         var data = $(this).data()
-        var type = data.type.toLowerCase()
-        if(type){
-            var description = $(this).closest(".w-dyn-item").find('.longer-description-html').html()
-            var st = data.subtype
+        var types = data.type.toLowerCase()
+        types = types.split("/")
 
-            var exist_subtype = sections[type].find(function(item){
-                return item.subtype == st && item.active == true
-            })
-            
-            var selection = data.selection.toLowerCase()
-            selection = (selection.includes("simple") ? "simple" : "multiple")
-            var active = !exist_subtype && selection == "simple" && data.parent == ""
-            var labelLevels = []
+        if(types.length > 0){
+            for (var type of types) {
+                var description = $(this).closest(".w-dyn-item").find('.longer-description-html').html()
+                var st = data.subtype
 
-            //var itt = {type : data.type, subtype : data.subtype, namesubtype : data.namesubtype, name : data.name, slug : data.slug, price : data.price,  image : data.image, thumbnail : data.thumbnail, description, active, show : false, order : data.order, selection : selection, object : data.object, group : data.group, material : data.material, function : data.function, parent : data.parent, childs : [], activeLevel : [] }
-            var itt = data
-            itt.description = description
-            itt.active = active
-            itt.show = false,
-                itt.selection = selection
-            itt.childs = []
-            itt.activeLevel = []
-            sections[type].push(itt)
+                var exist_subtype = sections[type].find(function(item){
+                    return item.subtype == st && item.active == true
+                })
+                
+                var selection = data.selection.toLowerCase()
+                selection = (selection.includes("simple") ? "simple" : "multiple")
+                var active = !exist_subtype && selection == "simple" && data.parent == ""
+
+                //var itt = {type : data.type, subtype : data.subtype, namesubtype : data.namesubtype, name : data.name, slug : data.slug, price : data.price,  image : data.image, thumbnail : data.thumbnail, description, active, show : false, order : data.order, selection : selection, object : data.object, group : data.group, material : data.material, function : data.function, parent : data.parent, childs : [], activeLevel : [] }
+                var itt = {...data}
+                itt.description = description
+                itt.active = active
+                itt.show = false,
+                    itt.selection = selection
+                itt.childs = []
+                itt.activeLevel = []
+                itt.myType = type
+                sections[type].push(itt)
+            }
         }
     })
 
@@ -583,6 +587,7 @@ function init(){
     $(".btn-slides").each(function(i){
         $(this).find(".nav-bar-click-link").each(function(j){
             $(this).attr('x-bind:class', "{'selected' : slideActive == '"+j+"', 'not-selective-link' : slideActive < '"+j+"'}")
+            slides.push({  id : j, name : $(this).text().toLowerCase() })
         })
     })
 
@@ -653,6 +658,7 @@ function init(){
                     var $item = (it.selection == "simple") ? $(item) : $(itemM)
                     $item.removeAttr("id")
                     $item.find('.parent').attr("id", it.slug)
+                    $item.find('.parent').addClass(it.slug)
                     $item.find('.parent').attr("data-type", it.type)
                     var vectary_function = it.function.toLowerCase().replace(" ", "-")
                     $item.find('.parent').attr("data-object", it.object).attr("data-group", it.group).attr("data-material", it.material).attr("data-function", it.function).addClass(vectary_function)
@@ -825,146 +831,158 @@ function init(){
 
                 if($target.length > 0 && !$(event.target).hasClass("text-details")){
                     var slug = $target.attr("id")
-                    var type = $target.data("type").toLowerCase()
-                    var tag = sections[type]
-                    var item = tag.find(function(i){ return i.slug == slug })
+                    var types = $target.data("type").toLowerCase()
+                    types = types.split("/")
 
-                    if(item.defaultView)
-                        this.setView(event, type, 'view-'+item.defaultView)
+                    for(var type of types){
+                        var tag = sections[type]
+                        var item = tag.find(function(i){ return i.slug == slug })
 
-                    $target.find(".section-3d").addClass("active")
+                        if(item.defaultView)
+                            this.setView(event, type, 'view-'+item.defaultView)
 
-                    if(item.selection == "multiple"){
-                        if(item.active && this.activeOptionLevel.slug == item.slug || !item.active || item.childs.length == 0){
-                            $target.toggleClass("selected")
-                            this.studio[type].selected.map(function(i){
-                                if(i.slug == slug) i.active = !i.active
-                                return i
-                            })
-                            if(item.childs.length > 0 && item.active === false){
-                                if(item.childs.length > 0){
-                                    for(c in item.childs){
-                                        item.childs[c].active = false
+                        $target.find(".section-3d").addClass("active")
+
+                        if(item.selection == "multiple"){
+                            if(item.active && this.activeOptionLevel.slug == item.slug || !item.active || item.childs.length == 0){
+                                $("."+slug).toggleClass("selected")
+                                this.studio[type].selected.map(function(i){
+                                    if(i.slug == slug) i.active = !i.active
+                                    return i
+                                })
+                                if(item.childs.length > 0 && item.active === false){
+                                    if(item.childs.length > 0){
+                                        for(c in item.childs){
+                                            item.childs[c].active = false
+                                        }
                                     }
                                 }
                             }
+
+                        }else if(item.selection == "simple"){
+                            // $target.closest(".collection-list").find(".collection-item").removeClass("selected")
+                            // $target.parent().addClass("selected")
+
+                            $("."+slug).closest(".collection-list").find(".collection-item").removeClass("selected")
+                            $("."+slug).parent().addClass("selected")
+
+                            var subtype = item.subtype
+                            this.studio[type].selected.map(function(i){
+                                if(i.subtype == subtype) i.active = false
+                                if(i.slug == slug) i.active = !i.active
+
+                                return i
+                            })
                         }
 
-                    }else if(item.selection == "simple"){
-                        $target.closest(".collection-list").find(".collection-item").removeClass("selected")
-                        $target.parent().addClass("selected")
-                        var subtype = item.subtype
-                        this.studio[type].selected.map(function(i){
-                            if(i.subtype == subtype) i.active = false
-                            if(i.slug == slug) i.active = !i.active
-
-                            return i
-                        })
-                    }
-
-                    if(this.activeLevel[item.subtype]){
-                        for(var l = 0; l < levels[item.selection].length; l++){
-                            this.activeLevel[item.subtype][l].items = []
+                        if(this.activeLevel[item.subtype]){
+                            for(var l = 0; l < levels[item.selection].length; l++){
+                                this.activeLevel[item.subtype][l].items = []
+                            }
                         }
-                    }
 
-                    if(item.childs.length > 0 && item.active == true && item.selection == "simple"){
-                        item.childs[0].active = true
+                        if(item.childs.length > 0 && item.active == true && item.selection == "simple"){
+                            item.childs[0].active = true
 
-                    }
-                    if(this.activeLevel[item.subtype]){
-                        for(var l in levels[item.selection]){
-                            var itemsChilds = []
-                            if(l == 0){
-                                itemsChilds = (item.active == true) ? item.childs : []
-                            }else{
-                                var prveLevel = activeLevel[item.subtype][l - 1]
-                                if(prveLevel && prveLevel.items.length > 0){
-                                    itemsChilds = (prveLevel.items[0].active == true) ? prveLevel.items[0].childs : []
+                        }
+                        if(this.activeLevel[item.subtype]){
+                            for(var l in levels[item.selection]){
+                                var itemsChilds = []
+                                if(l == 0){
+                                    itemsChilds = (item.active == true) ? item.childs : []
+                                }else{
+                                    var prveLevel = activeLevel[item.subtype][l - 1]
+                                    if(prveLevel && prveLevel.items.length > 0){
+                                        itemsChilds = (prveLevel.items[0].active == true) ? prveLevel.items[0].childs : []
+                                    }
                                 }
-                            }
 
-                            if(itemsChilds.length > 0 && item.selection == "simple"){
-                                var li = getLevel(itemsChilds[0], 0, type)
-                                itemsChilds[0].active = (item[ll[li]].toLowerCase() == "simple")//true
+                                if(itemsChilds.length > 0 && item.selection == "simple"){
+                                    var li = getLevel(itemsChilds[0], 0, type)
+                                    itemsChilds[0].active = (item[ll[li]].toLowerCase() == "simple")//true
+                                }
+                                this.activeLevel[item.subtype][l].items = itemsChilds
                             }
-                            this.activeLevel[item.subtype][l].items = itemsChilds
                         }
-                    }
 
-                    this.activeOptionLevel = {
-                        slug : "",
-                        levels : []
-                    }
-
-                    if(item.childs.length > 0 && item.active){
                         this.activeOptionLevel = {
-                            slug : item.slug,
-                            levels : [levels[item.selection ][0]]
+                            slug : "",
+                            levels : []
                         }
+
+                        if(item.childs.length > 0 && item.active){
+                            this.activeOptionLevel = {
+                                slug : item.slug,
+                                levels : [levels[item.selection ][0]]
+                            }
+                        }
+
+                        this.studio[type].active = item
+                        setTimeout(function(){
+                            this.renderSelection()
+                            this.setPrice()
+                        }.bind(this), 300)
                     }
-
-                    this.studio[type].active = item
-                    setTimeout(function(){
-                        this.renderSelection()
-                        this.setPrice()
-                    }.bind(this), 300)
-
                 }else if($child && $child.length > 0){
                     var slug = $child.attr("id")
-                    var type = $child.data("type").toLowerCase()
-                    var level = $child.data("level").toLowerCase()
-                    var tag = sections[type]
-                    var item = tag.find(function(i){ return i.slug == slug })
+                    var types = $child.data("type").toLowerCase()
+                    types = types.split("/")
 
-                    var subtype = item.subtype
-                    var _this = this
-                    
-                    this.studio[type].selected.map(function(i){
-                        if(i.subtype == item.subtype && item["selectionlevel"+level].toLowerCase() == "simple") //
-                            i.active = false
-                        return i
-                    })
-                    this.studio[type].selected.map(function(i){
-                        if(i.slug == slug) {
-                            i.active = !i.active
+                    for(var type of types){
 
-                            var parent = i.parent
-                            if(parent != "" && i.active)
-                                _this.setParent(parent, type)
+                        var level = $child.data("level").toLowerCase()
+                        var tag = sections[type]
+                        var item = tag.find(function(i){ return i.slug == slug })
+                        var subtype = item.subtype
+                        var _this = this
+                        
+                        this.studio[type].selected.map(function(i){
+                            if(i.subtype == item.subtype && item["selectionlevel"+level].toLowerCase() == "simple") //
+                                i.active = false
+                            return i
+                        })
+
+                        this.studio[type].selected.map(function(i){
+                            if(i.slug == slug) {
+                                i.active = !i.active
+
+                                var parent = i.parent
+                                if(parent != "" && i.active)
+                                    _this.setParent(parent, type)
+                            }
+                            return i
+                        })
+
+                        var l_index = levels[item.selection ].findIndex(function(l){
+                            return l == level
+                        })
+
+                        l_index++
+                        var next_level = levels[item.selection ][l_index]
+                        this.activeOptionLevel.levels.splice(l_index);
+
+                        for(var l = l_index; l < levels[item.selection ].length; l++){
+                            this.activeLevel[item.subtype][l].items = []
                         }
-                        return i
-                    })
 
-                    var l_index = levels[item.selection ].findIndex(function(l){
-                        return l == level
-                    })
+                        if(item.childs.length > 0 && item.active === false){
+                            for(c in item.childs){
+                                item.childs[c].active = false
+                            }
+                        }else if(item.childs.length > 0 && item.active === true && item["selectionlevel"+level].toLowerCase() == "simple"){
+                            this.activeLevel[item.subtype][l_index].items = item.childs
+                            this.activeOptionLevel.levels.push(next_level)
+                            var li = getLevel(item.childs[0], 0, type)
+                            if(item.selection == "simple"){
+                                item.childs[0].active = (item[ll[li]].toLowerCase() == "simple")//true
+                            }
+                        }
 
-                    l_index++
-                    var next_level = levels[item.selection ][l_index]
-                    this.activeOptionLevel.levels.splice(l_index);
-
-                    for(var l = l_index; l < levels[item.selection ].length; l++){
-                        this.activeLevel[item.subtype][l].items = []
+                        setTimeout(function(){
+                            this.renderSelection()
+                            this.setPrice()
+                        }.bind(this), 200)
                     }
-
-                    if(item.childs.length > 0 && item.active === false){
-                        for(c in item.childs){
-                            item.childs[c].active = false
-                        }
-                    }else if(item.childs.length > 0 && item.active === true && item["selectionlevel"+level].toLowerCase() == "simple"){
-                        this.activeLevel[item.subtype][l_index].items = item.childs
-                        this.activeOptionLevel.levels.push(next_level)
-                        var li = getLevel(item.childs[0], 0, type)
-                        if(item.selection == "simple"){
-                            item.childs[0].active = (item[ll[li]].toLowerCase() == "simple")//true
-                        }
-                    }
-
-                    setTimeout(function(){
-                        this.renderSelection()
-                        this.setPrice()
-                    }.bind(this), 200)
                 }
 
                 setTimeout(function(){
@@ -998,21 +1016,26 @@ function init(){
         },
         setPrice : function(){
             var total = modelSelected.price
+            let selectedIncludes = [modelSelected]
             for (const i in this.studio) {
                 var item = this.studio[i]
                 if(i != "model"){
                     if(item.price != undefined){
                         total = parseFloat(total) + parseFloat(item.price)
+                        selectedIncludes.push({...item})
                     }else{
                         for (const j in this.studio[i].selected) {
                             var itemJ = this.studio[i].selected[j]
-                            if(itemJ.active === true)
+                            let exist = selectedIncludes.find(function(i){ return i.slug == itemJ.slug })
+
+                            if(itemJ.active === true && !exist){
                                 total = parseFloat(total) + parseFloat(itemJ.price)
+                                selectedIncludes.push({...itemJ})
+                            }
                         }
                     }
                 }
             }
-
 
             try {
                 var address = document.getElementById('Address').value.trim();
@@ -1154,10 +1177,14 @@ function init(){
                         for (const j in items) {
                             value.push(items[j].name)
                             let renderitem = { type: items[j].type, name : items[j].namesubtype + " - " + items[j].name, slug : items[j].slug, price : items[j].price, image : (items[j].image) ? items[j].image : null, thumbnail : (items[j].thumbnail) ? items[j].thumbnail : null}
-                            this.studioItems.push(renderitem)
-                            var name = items[j].namesubtype ? items[j].namesubtype + " - " : ""
-                            let renderitemShort = { type: items[j].type, name : name  + items[j].name, price : items[j].price, image : (items[j].thumbnail) ? items[j].thumbnail : (items[j].image) ? items[j].image : null}
-                            detailOrder.push(renderitemShort)
+                            
+                            let exist = this.studioItems.find(function(i){ return i.slug == renderitem.slug })
+                            if(!exist){
+                                this.studioItems.push(renderitem)
+                                var name = items[j].namesubtype ? items[j].namesubtype + " - " : ""
+                                let renderitemShort = { type: items[j].type, name : name  + items[j].name, price : items[j].price, image : (items[j].thumbnail) ? items[j].thumbnail : (items[j].image) ? items[j].image : null}
+                                detailOrder.push(renderitemShort)
+                            }
                         }
                         this[i+"V"] = value.join(", ")
                     }
@@ -1283,19 +1310,28 @@ function init(){
                 this.studio[t.toLowerCase()].image = this.studio[t.toLowerCase()].base_image ? this.studio[t.toLowerCase()].base_image : this.studio[t.toLowerCase()].image
                 return;
             }
-            let typeView = s.split("-").map(str => str.charAt(0).toUpperCase() + str.slice(1)).join("")
-            typeView = typeView.charAt(0).toLowerCase() + typeView.slice(1)
 
-            if(this.studio.model[typeView]){
-                this.studio[t.toLowerCase()].img_view = this.studio.model[typeView]
-                this.studio[t.toLowerCase()].base_image = this.studio[t.toLowerCase()].image
-                this.studio[t.toLowerCase()].image = this.studio[t.toLowerCase()]    
-            }else{
-                this.studio[t.toLowerCase()].img_view = ""
-                this.studio[t.toLowerCase()].image = this.studio[t.toLowerCase()].base_image ? this.studio[t.toLowerCase()].base_image : this.studio[t.toLowerCase()].image
+            var activeType = slides.find((s) => s.id == this.slideActive)
+
+            let activeView = views.filter((_, view) => {
+                return "view-"+view.slug == s
+            })
+
+            if(activeView.length > 0 && activeView[0].type.toLowerCase() == activeType.name && t.toLowerCase() == activeType.name){
+                let typeView = s.split("-").map(str => str.charAt(0).toUpperCase() + str.slice(1)).join("")
+                typeView = typeView.charAt(0).toLowerCase() + typeView.slice(1)
+
+                if(this.studio.model[typeView]){
+                    this.studio[t.toLowerCase()].img_view = this.studio.model[typeView]
+                    this.studio[t.toLowerCase()].base_image = this.studio[t.toLowerCase()].image
+                    this.studio[t.toLowerCase()].image = this.studio[t.toLowerCase()]    
+                }else{
+                    this.studio[t.toLowerCase()].img_view = ""
+                    this.studio[t.toLowerCase()].image = this.studio[t.toLowerCase()].base_image ? this.studio[t.toLowerCase()].base_image : this.studio[t.toLowerCase()].image
+                }
+
+                this.studio[t.toLowerCase()].view = typeView
             }
-
-            this.studio[t.toLowerCase()].view = typeView
         },
         getSrc(type, item){
             let img = null
