@@ -1275,9 +1275,19 @@ function init(){
                         builder: getBuilder()
                     })
                 }
-                setTimeout(() => {
-                    window.location.href = "https://" + window.location.hostname + "/thank-you"
-                }, 2000)
+
+                const formId = $("[data-form-track]").attr("id")
+                $(document).ajaxComplete(function(ev, request, settings) {       
+                    var el = ev.currentTarget[formId]
+                    if(request.status == 200){
+                        if($(el).attr("id") == formId){
+                            setTimeout(() => {
+                                window.location.href = "https://" + window.location.hostname + "/thank-you"
+                            }, 2000)
+                        }
+                    }
+                });
+
             }
         },
         changeCurrency : function(c){
