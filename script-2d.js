@@ -1298,7 +1298,10 @@ function init(){
                 $(el).triggerHandler('w-close.w-dropdown');
             });
         },
-        setCurrencyPrice: function(p, symbol = ""){return symbol + " " + (p / currencys[this.currency]).toFixed(0) },
+        setCurrencyPrice: function(p, symbol = ""){
+            console.log(p, currencys[this.currency], (p / currencys[this.currency]).toFixed(0) )
+            return symbol + " " + (p / currencys[this.currency]).toFixed(0) 
+        },
         showPop: function(s, i){ this.studio[s].selected[i].show = true },
         hidePop: function(s, i){ this.studio[s].selected[i].show = false },
         showFurniture : function(){
