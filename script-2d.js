@@ -674,7 +674,7 @@ function init(){
                     if(h_price){
                         h_price = h_price.replace("{price}", it.price)
                         $p.html(h_price)
-                        $item.find('.text-price span').attr("x-text", "setCurrencyPrice("+item.price+", '+ $')")
+                        $item.find('.text-price span').attr("x-text", "setCurrencyPrice("+it.price+", '+ $')")
                     }
                     if(it.price === 0)
                         $p.addClass(hc)
@@ -1299,7 +1299,7 @@ function init(){
             });
         },
         setCurrencyPrice: function(p, symbol = ""){
-            return symbol + " " + ((p || 0) / currencys[this.currency]).toFixed(0) 
+            return symbol + " " + (p / currencys[this.currency]).toFixed(0) 
         },
         showPop: function(s, i){ this.studio[s].selected[i].show = true },
         hidePop: function(s, i){ this.studio[s].selected[i].show = false },
