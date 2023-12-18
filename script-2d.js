@@ -522,6 +522,7 @@ function init(){
                 itt.childs = []
                 itt.activeLevel = []
                 itt.myType = type
+                itt.price = itt.price || 0
                 sections[type].push(itt)
             }
         }
@@ -673,7 +674,7 @@ function init(){
                     if(h_price){
                         h_price = h_price.replace("{price}", it.price)
                         $p.html(h_price)
-                        $item.find('.text-price span').attr("x-text", "setCurrencyPrice("+it.price+", '+ $')")
+                        $item.find('.text-price span').attr("x-text", "setCurrencyPrice("+item.price+", '+ $')")
                     }
                     if(it.price === 0)
                         $p.addClass(hc)
