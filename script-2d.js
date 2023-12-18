@@ -1299,8 +1299,7 @@ function init(){
             });
         },
         setCurrencyPrice: function(p, symbol = ""){
-            console.log(p, currencys[this.currency], (p / currencys[this.currency]).toFixed(0) )
-            return symbol + " " + (p / currencys[this.currency]).toFixed(0) 
+            return symbol + " " + ((p || 0) / currencys[this.currency]).toFixed(0) 
         },
         showPop: function(s, i){ this.studio[s].selected[i].show = true },
         hidePop: function(s, i){ this.studio[s].selected[i].show = false },
