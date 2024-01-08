@@ -937,6 +937,9 @@ function init(){
                         var subtype = item.subtype
                         var _this = this
                         
+                        if(item.defaultView)
+                            this.setView(event, type, 'view-'+item.defaultView)
+
                         this.studio[type].selected.map(function(i){
                             if(i.subtype == item.subtype && item["selectionlevel"+level].toLowerCase() == "simple") //
                                 i.active = false
@@ -1393,6 +1396,10 @@ function init(){
             // })
 
             return this.studio.model[typeView] !== "" //exist.length > 0
+        },
+        showMessagesError(message){
+            console.log(message)
+            let msg = JSON.parse(message)
         }
     }
 }
