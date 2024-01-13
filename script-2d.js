@@ -1286,7 +1286,11 @@ function init(){
                     if(request.status == 200){
                         if($(el).attr("id") == formId){
                             setTimeout(() => {
-                                window.location.href = "https://" + window.location.hostname + "/thank-you"
+                                if(paymentLink !== ""){
+                                    window.location.href = paymentLink
+                                }else{
+                                    window.location.href = "https://" + window.location.hostname + "/thank-you"
+                                }
                             }, 2000)
                         }
                     }
