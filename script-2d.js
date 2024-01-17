@@ -1230,6 +1230,8 @@ function init(){
                                 if(paymentLink !== ""){
                                     window.location.href = paymentLink
                                 }else{
+                                    $("[data-form-track]").find('[data-btn-submit]').attr("disabled", true)
+                                    $("[data-form-track]").find('[data-btn-submit]').text("Please wait...")
                                     window.location.href = "https://" + window.location.hostname + "/thank-you"
                                 }
                             }, 2000)
