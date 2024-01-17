@@ -1133,7 +1133,7 @@ function init(){
             var localizedCost = this.currency === "CAD" ? shippingCost / currencys["CAD"] : shippingCost
             const defaultShipText = "Estimated shipping"
             var shipText = shippingCost ? "Shipping cost: " + formatter.format(localizedCost) : defaultShipText
-            if (shipText !== defaultShipText) {
+            if (this.shipping) {
                 this.studioItems.push({type : "shipping", name : shipText, price : this.shipping,  image : "", thumbnail : imgshipping})
                 detailOrder.push({type : "shipping", name : shipText, price : this.shipping,  image : imgshipping})
             }else{
