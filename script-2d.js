@@ -1098,7 +1098,6 @@ function init(){
             if (slide == this.installationSlide  && inputs.length > 0) this.valid = false
         },
         renderSelection(){
-
             this.studioItems = []
             var detailOrder = [{type: "Logo", image: $("#configurator-logo").attr("src")}, {type: "Currency", name: $("#order-currency").text()},
                 {type: "crane", image: $("#crane-img").attr("src"), name: $("#crane-name").text(), price: $("#crane-price").text()},
@@ -1227,7 +1226,7 @@ function init(){
                     if(request.status == 200){
                         if($(el).attr("id") == formId){
                             $("[data-form-track]").find('[data-btn-submit]').attr("disabled", true)
-                            $("[data-form-track]").find('[data-btn-submit]').text("Please wait...")
+                            $("[data-form-track]").find('[data-btn-submit]').attr("value", "Please wait...")
                             setTimeout(() => {
                                 if(paymentLink !== ""){
                                     window.location.href = paymentLink
