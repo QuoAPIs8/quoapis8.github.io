@@ -1042,77 +1042,11 @@ function init(){
                 }
             }
 
-            try {
-                var address = document.getElementById('Address').value.trim();
-                var city = document.getElementById('City').value.trim();
-                var state =  this.customer.state
+            total = parseFloat(total) + parseFloat(this.shipping)
+            this.studio.price = formatter.format(this.setCurrencyPrice(total))
+            this.setLoan(total)
+            totalPrice = total
 
-                const modelName = getModelName(window.location.pathname)
-                const pricePerMile = lookup[modelName]["price-per-mile"]
-
-                const service = new google.maps.DistanceMatrixService();
-
-                if (address !== "" && city !== "" && state !== "" && (modelName === "the-twelve" || modelName === "the-sixteen")) {
-                    var dest = "";
-                    dest += address + "," + city + "," + state
-
-                    service.getDistanceMatrix({
-                        origins: ["Chattanooga, TN", "5617 104th Pl NE, Marysville, WA"],
-                        destinations: [dest],
-                        unitSystem: google.maps.UnitSystem.IMPERIAL,
-                        travelMode: google.maps.TravelMode.DRIVING,
-                        avoidHighways: false,
-                        avoidTolls: false,
-                    }, (response, status) => {
-                        if (status == "OK") {
-
-                            const michiganResult = pricePerMile * parseMiles(response.rows[0].elements[0].distance.text)
-                            const washingtonResult = pricePerMile * parseMiles(response.rows[1].elements[0].distance.text)
-
-                            var price = michiganResult < washingtonResult ? michiganResult : washingtonResult;
-
-                            if (modelName === "the-twelve") {
-                                if (price < 600) {
-                                    price = 600
-                                }
-                                else if (price > 3600) {
-                                    price = 3600
-                                }
-
-                            }
-                            else if (modelName === "the-sixteen") {
-                                if (price < 800) {
-                                    price = 800
-                                }
-                                else if (price > 4250) {
-                                    price = 4250
-                                }
-                            }
-
-                            if (this.currency === "CAD") {
-                                price += 250
-                            }
-
-                            shippingCost = price
-                            total = parseFloat(total) + price
-                            this.studio.price = formatter.format(this.setCurrencyPrice(total))
-                            this.setLoan(total)
-                            totalPrice = total;
-                            this.renderSelection()
-                        }
-                    })
-                } else {
-                    total = parseFloat(total) + parseFloat(this.shipping)
-                    this.studio.price = formatter.format(this.setCurrencyPrice(total))
-                    this.setLoan(total)
-                    totalPrice = total
-                }
-            } catch (error) {
-                total = parseFloat(total) + parseFloat(this.shipping)
-                this.studio.price = formatter.format(this.setCurrencyPrice(total))
-                this.setLoan(total)
-                totalPrice = total
-            }
         },
         setLoan : function(total){
             var tax = (parseFloat(8) + parseFloat(2.9) + parseFloat(2)) / 100;
@@ -1222,7 +1156,7 @@ function init(){
                 var zip_price = $("#zip-price").text();
                 var zip = event.target.value
                 var _this = this
-                if(zip != ""){
+                if(zip != "" && zip_price != "" && zip_init != ""){
                     $.get("https://api.zip-codes.com/ZipCodesAPI.svc/1.0/CalculateDistance/ByZip?fromzipcode="+zip_init+"&tozipcode="+zip+"&key="+zz)
                         .done(function(res){
                             if(res.DistanceInMiles || res.DistanceInMiles == 0.0){
