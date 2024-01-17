@@ -1098,6 +1098,7 @@ function init(){
             if (slide == this.installationSlide  && inputs.length > 0) this.valid = false
         },
         renderSelection(){
+
             this.studioItems = []
             var detailOrder = [{type: "Logo", image: $("#configurator-logo").attr("src")}, {type: "Currency", name: $("#order-currency").text()},
                 {type: "crane", image: $("#crane-img").attr("src"), name: $("#crane-name").text(), price: $("#crane-price").text()},
@@ -1139,6 +1140,7 @@ function init(){
             }else{
                 detailOrder.push({type : "shipping", name : shipText, price : $("#shipping-cost").text(),  image : imgshipping})
             }
+
             this.studioItems.push(modelSelected)
             detailOrder = JSON.stringify(detailOrder)
             detailOrder = detailOrder.replace(/–/g, "")
