@@ -750,7 +750,7 @@ function init(){
     var $itemOrder = $(itemOrder)
     var templateCustomOrder = ''
     templateCustomOrder += '<template role="listitem" class="'+classitemOrder+'" x-for="item in studioItems" :key="item">'
-    $itemOrder.find('.div-block-295').attr('x-bind:class', `{'hidden' : item.type == 'model'}`)
+    $itemOrder.find('.div-block-295').attr('x-bind:class', `{'model-item' : item.type == 'model'}`)
     $itemOrder.find('img').attr('x-show', "item.thumbnail").attr('x-bind:src', "item.thumbnail").attr("x-bind:srcset", "item.thumbnail")
     $itemOrder.find('.price-text').attr("x-text", "formatMoney(setCurrencyPrice(item.price), false)").removeClass(hc)
     $itemOrder.find('.title-tag').attr("x-text","item.name")
@@ -834,19 +834,17 @@ function init(){
                     $child = $(event.target).closest(".collection-item-5")
                 }
 
-                $(".bind-image").css("opacity", "0")
-                setTimeout(function(){
-                    $(".bind-image").css("opacity", "1")
-                }, 600);
+                // $(".bind-image").css("opacity", "0")
+                // setTimeout(function(){
+                //     $(".bind-image").css("opacity", "1")
+                // }, 600);
 
-                await this.sleep(300)
+                // await this.sleep(300)
                 
                 if($target.length > 0 && !$(event.target).hasClass("text-details")){
                     var slug = $target.attr("id")
                     var types = $target.data("type").toLowerCase()
                     types = types.split("/")
-
-
 
                     for(var type of types){
                         var tag = sections[type]
@@ -1279,12 +1277,12 @@ function init(){
             $("[data-view='"+t.toLowerCase()+"'] .view-name").removeClass("is-active")
             btn.addClass("is-active")
 
-            $(".bind-image").css("opacity", "0")
-            setTimeout(function(){
-                $(".bind-image").css("opacity", "1")
-            }, 600);
+            // $(".bind-image").css("opacity", "0")
+            // setTimeout(function(){
+            //     $(".bind-image").css("opacity", "1")
+            // }, 600);
 
-            await this.sleep(300)
+            // await this.sleep(300)
 
             if(!s){
                 this.studio[t.toLowerCase()].view = ""
