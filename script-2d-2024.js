@@ -795,6 +795,7 @@ function init(){
     }
 
     $("[data-autocomplete]").attr("x-on:keyup.debounce.500ms", "getAddress")
+    $("[data-autocomplete]").attr("x-on:focus.debounce.500ms", "openAddress")
     var formatTextAutocomplete = $("[data-autocomplete-results]").find("li")[0].outerHTML
 
     return {
@@ -809,6 +810,7 @@ function init(){
         zipSending: false,
         detailOrder: "",
         canSearch: true,
+        currentAddress: [],
         init : function(){
             history.pushState(null, "", "#size");
             this.renderSelection()
@@ -1191,6 +1193,7 @@ function init(){
                 }else{
                     _this.shipping = 0
                     _this.renderSelection()
+                    _this.zipSending = false
                 }
             }
         },
@@ -1374,8 +1377,6 @@ function init(){
             let msg = JSON.parse(message)
         },
         getAddress(ev){
-            
-
             var val = $(ev.target).val()
 
             if(this.canSearch){
@@ -1395,6 +1396,7 @@ function init(){
                             result.features.forEach(el => {
                                 if(el && el.properties && el.properties.formatted){
                                     var $item = $(formatTextAutocomplete)
+                                    this.currentAddress.push(el.properties.formatted)
                                     $item.text(el.properties.formatted)
                                     $item.attr("data-state", el.properties.state)
                                     $item.attr("data-city", el.properties.city)
@@ -1421,10 +1423,38 @@ function init(){
                 this.customer.state = ""
                 this.customer.city = ""
                 this.customer.zip = ""
+
+                $("#State").val(this.customer.state);
+                $("#State").trigger("change");
+
+                this.changeZip({
+                    target: { value: this.customer.zip }
+                })
+            }
+        },
+        openAddress(){
+            if(this.currentAddress.length > 0){
+                $("[data-autocomplete-results] ul").addClass("active");
             }
         },
         closeAddress(){
             $("[data-autocomplete-results] ul").removeClass("active");
+            setTimeout(() => {
+                if(!this.currentAddress.includes(this.customer.address)){
+                    this.customer.address = ""
+                    this.customer.state = ""
+                    this.customer.city = ""
+                    this.customer.zip = ""
+
+                    $("#State").val(this.customer.state);
+                    $("#State").trigger("change");
+
+                    this.changeZip({
+                        target: { value: this.customer.zip }
+                    })
+                }
+            }, 60)
+
         },
         setAddress(ev){
             var $address = $(ev.target)
@@ -1437,13 +1467,13 @@ function init(){
             $("#State").val(this.customer.state);
             $("#State").trigger("change");
 
-            if(this.customer.zip != ""){
-                this.changeZip({
-                    target: { value: this.customer.zip }
-                })
-            }
 
-            $("[data-autocomplete-results] ul").removeClass("active");
+            this.changeZip({
+                target: { value: this.customer.zip }
+            })
+            
+
+            this.closeAddress()
         }
     }
 }
