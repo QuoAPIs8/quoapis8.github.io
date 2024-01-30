@@ -797,6 +797,10 @@ function init(){
     $("[data-autocomplete]").attr("x-on:keyup.debounce.500ms", "getAddress")
     $("[data-autocomplete]").attr("x-on:focus.debounce.500ms", "openAddress")
     var formatTextAutocomplete = $("[data-autocomplete-results]").find("li")[0].outerHTML
+    let shippingTextSub = $("[shipping-text-sub]").text()
+    $("[shipping-text-sub]").remove()
+
+    console.log("Shipping: ", shippingTextSub)
 
     return {
         sections : sections, studio : studio, studioItems : [], active : true,  shipping : 0, customer : customer, upgradesV : "", servicesV : "", interiorV : "", layoutV : "", exteriorV : "", valid : true, currency : "USD", slideActive : 0, summarySlide : slidesT.length - 1, installationSlide : slidesT.length - 2, show_furniture : true,
@@ -811,6 +815,7 @@ function init(){
         detailOrder: "",
         canSearch: true,
         currentAddress: [],
+        addressBgInitial: "",
         init : function(){
             history.pushState(null, "", "#size");
             this.renderSelection()
@@ -826,6 +831,11 @@ function init(){
             $('#State').on('select2:select', function (e) { 
                 _this.customer.state = e.target.value
             });
+
+            function getBgrColor(elem) {
+                return $(elem).css("background-color");
+            }
+            this.addressBgInitial = getBgrColor($('#Address')[0]);
 
         },
         sleep: function (ms) {
@@ -1154,10 +1164,10 @@ function init(){
             const defaultShipText = "Estimated shipping"
             var shipText = shippingCost ? "Shipping cost: " + formatter.format(localizedCost) : defaultShipText
             if (this.shipping) {
-                this.studioItems.push({type : "shipping", name : shipText, price : this.shipping,  image : "", thumbnail : imgshipping})
-                detailOrder.push({type : "shipping", name : shipText, price : this.shipping,  image : imgshipping})
+                this.studioItems.push({type : "shipping", name : shipText, price : this.shipping,  image : "", thumbnail : imgshipping, 'dimensions': shippingTextSub})
+                detailOrder.push({type : "shipping", name : shipText, price : this.shipping,  image : imgshipping, 'dimensions': 'Shipping Sub'})
             }else{
-                detailOrder.push({type : "shipping", name : shipText, price : $("#shipping-cost").text(),  image : imgshipping})
+                detailOrder.push({type : "shipping", name : shipText, price : $("#shipping-cost").text(),  image : imgshipping, 'dimensions': 'Shipping Sub'})
             }
 
             this.studioItems.push(modelSelected)
@@ -1440,7 +1450,10 @@ function init(){
         closeAddress(){
             $("[data-autocomplete-results] ul").removeClass("active");
             setTimeout(() => {
-                if(!this.currentAddress.includes(this.customer.address)){
+                var bgr = $("[data-autocomplete]").css("background-color");
+                var autoFill = bgr != this.addressBgInitial
+
+                if(!autoFill && !this.currentAddress.includes(this.customer.address)){
                     this.customer.address = ""
                     this.customer.state = ""
                     this.customer.city = ""
