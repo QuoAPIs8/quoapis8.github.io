@@ -1431,7 +1431,8 @@ function init(){
                                     
                                     addressget = addressget.filter(Boolean).join(", ")
                                     this.currentAddress.push(addressget)
-                                    $item.text(addressget)
+                                    $item.text(el.properties.formatted)
+                                    $item.attr("data-address", addressget)
                                     $item.attr("data-state", el.properties.state)
                                     $item.attr("data-city", el.properties.city)
                                     $item.attr("data-county", el.properties.county)
@@ -1507,7 +1508,7 @@ function init(){
         setAddress(ev){
             var $address = $(ev.target)
  
-            this.customer.address = $address.text()
+            this.customer.address = $address.data("address")
             this.customer.state = $address.data("state")
             this.customer.city = $address.data("city")
             this.customer.zip = $address.data("postcode")
