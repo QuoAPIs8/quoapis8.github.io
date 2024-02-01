@@ -532,6 +532,7 @@ function init(){
         var data = $(this).find(".Services").data()
         $(this).addClass("parent")
         $(this).attr("id", data.id).attr("data-type", data.type).attr("data-selection", data.selection)
+        $(this).addClass(data.id)
     })
 
     var childHtml = {
@@ -780,6 +781,14 @@ function init(){
                 selected: sections[sec]
             }}
     }
+    try{
+        studio['services'].selected.filter(st => st.active).map(function(it){
+            $("#"+it.slug).addClass("selected")
+        })
+    }catch(e){
+        console.log(e)
+    }
+    
     let baseViews = ['interior', 'exterior']
     for (let view of baseViews) {
         studio[view].img_view = ""
@@ -799,8 +808,6 @@ function init(){
     var formatTextAutocomplete = $("[data-autocomplete-results]").find("li")[0].outerHTML
     let shippingTextSub = $("[shipping-text-sub]").text()
     $("[shipping-text-sub]").remove()
-
-    console.log("Shipping: ", shippingTextSub)
 
     return {
         sections : sections, studio : studio, studioItems : [], active : true,  shipping : 0, customer : customer, upgradesV : "", servicesV : "", interiorV : "", layoutV : "", exteriorV : "", valid : true, currency : "USD", slideActive : 0, summarySlide : slidesT.length - 1, installationSlide : slidesT.length - 2, show_furniture : true,
@@ -842,7 +849,6 @@ function init(){
             return new Promise(resolve => setTimeout(resolve, ms));
         },        
         setStudio : async function(event){
-
             if(!this.runScript){
 
                 this.runScript = true
@@ -877,7 +883,9 @@ function init(){
 
                         if(item.selection == "multiple"){
                             if(item.active && this.activeOptionLevel.slug == item.slug || !item.active || item.childs.length == 0){
-                                $("."+slug).toggleClass("selected")
+                                if($("."+slug).length > 0)
+                                    $("."+slug).toggleClass("selected")
+
                                 this.studio[type].selected.map(function(i){
                                     if(i.slug == slug) i.active = !i.active
                                     return i
@@ -896,7 +904,10 @@ function init(){
                             // $target.parent().addClass("selected")
 
                             $("."+slug).closest(".collection-list").find(".collection-item").removeClass("selected")
-                            $("."+slug).parent().addClass("selected")
+                            if($('.'+slug).hasClass("collection-item"))
+                                $('.'+slug).addClass("selected")
+                            else
+                                $("."+slug).parent().addClass("selected")
 
                             var subtype = item.subtype
                             this.studio[type].selected.map(function(i){
@@ -905,6 +916,7 @@ function init(){
 
                                 return i
                             })
+                            
                         }
 
                         if(this.activeLevel[item.subtype]){
@@ -1391,6 +1403,12 @@ function init(){
 
             if(this.canSearch){
                 if(val.length > 3){
+                    $("[data-autocomplete-results] ul").html("")
+                    $("[data-autocomplete-results] ul").addClass("active");
+                    var $itemD = $(formatTextAutocomplete)
+                    $itemD.text("Loading...")
+                    $("[data-autocomplete-results] ul").append($itemD)
+
                     this.canSearch = false
                     this.resetAddress()
                     fetch("https://api.geoapify.com/v1/geocode/autocomplete?text="+val+"&apiKey=9b2e3ec0cbf94f37bcc74ce018e101d3", {
@@ -1401,13 +1419,20 @@ function init(){
                         setTimeout(function() {this.canSearch = true}.bind(this), 500)
                         if(result.features.length > 0){
                             $("[data-autocomplete-results] ul").html("")
-                            $("[data-autocomplete-results] ul").addClass("active");
                             
                             result.features.forEach(el => {
                                 if(el && el.properties && el.properties.formatted){
+                                    console.log(el.properties)
                                     var $item = $(formatTextAutocomplete)
-                                    this.currentAddress.push(el.properties.formatted)
-                                    $item.text(el.properties.formatted)
+                                    let addressget = [] 
+                                    if(el.properties.address_line1)
+                                        addressget.push(el.properties.address_line1)
+                                    if(el.properties.housenumber || el.properties.street)
+                                        addressget.push(el.properties.housenumber ?? "" + " " + el.properties.street ?? "")
+                                    
+                                    addressget = addressget.filter(Boolean).join(", ")
+                                    this.currentAddress.push(addressget)
+                                    $item.text(addressget)
                                     $item.attr("data-state", el.properties.state)
                                     $item.attr("data-city", el.properties.city)
                                     $item.attr("data-county", el.properties.county)
@@ -1415,6 +1440,17 @@ function init(){
                                     $("[data-autocomplete-results] ul").append($item)
                                 }
                             });
+                        }else{
+                            $("[data-autocomplete-results] ul").html("")
+                            $itemD.text("Not found results")
+                            $("[data-autocomplete-results] ul").append($itemD)
+
+                            setTimeout(function() {
+                                this.canSearch = true;
+                                $("[data-autocomplete-results] ul").html("")
+                                $("[data-autocomplete-results] ul").removeClass("active");
+                            }.bind(this), 1200)
+
                         }
                     })
                     .catch(error => {
