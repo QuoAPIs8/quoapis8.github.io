@@ -1422,7 +1422,6 @@ function init(){
                             
                             result.features.forEach(el => {
                                 if(el && el.properties && el.properties.formatted){
-                                    console.log(el.properties)
                                     var $item = $(formatTextAutocomplete)
                                     let addressget = [] 
                                     if(el.properties.address_line1)
