@@ -1426,8 +1426,10 @@ function init(){
                                     let addressget = [] 
                                     if(el.properties.name)
                                         addressget.push(el.properties.name)
-                                    if(el.properties.housenumber || el.properties.street)
-                                        addressget.push(el.properties.housenumber ?? "" + " " + el.properties.street ?? "")
+                                    if(el.properties.housenumber)
+                                        addressget.push(el.properties.housenumber)
+                                    if(el.properties.street)
+                                        addressget.push(el.properties.street)
                                     
                                     addressget = addressget.filter(Boolean).join(", ")
                                     this.currentAddress.push(addressget)
