@@ -1423,9 +1423,13 @@ function init(){
                             result.features.forEach(el => {
                                 if(el && el.properties && el.properties.formatted){
                                     var $item = $(formatTextAutocomplete)
+                                    let addressget = [] 
+                                    if(el.properties.name)
+                                        addressget.push(el.properties.name)
+                                    if(el.properties.housenumber || el.properties.street)
+                                        addressget.push(el.properties.housenumber ?? "" + " " + el.properties.street ?? "")
                                     
-                                    
-                                    addressget = el.properties.address_line1
+                                    addressget = addressget.filter(Boolean).join(", ")
                                     this.currentAddress.push(addressget)
                                     $item.text(el.properties.formatted)
                                     $item.attr("data-address", addressget)
