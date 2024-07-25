@@ -2086,7 +2086,7 @@
         integrity="sha384-bjyNIOqAKScdeQ3THsDZLGagNN56B4X2Auu9YZIGu+tA/PlggMk4jbWruG/P6zYj"
         crossorigin="anonymous"></script>
     <script type="text/javascript" >
-        $(()=>{let t=$(".ima-wrap-5"),n=$(".right-arrow"),e=0,i=!1,a=setInterval(l,3e3);function l(){i=!0,++e===t.length&&(e=0),n.click(),c()}function c(){let n=$(t[e]),i=n.data("text"),a=i[0];a=a.split("");let l=0,c=setInterval(()=>{if(l===i.length){clearInterval(c);return}a[l]=i[l],l++,$(".ima-heading-text-span").text(a.join(""))},1200/i.length);$(".ima-heading-text-span").text(a)}$(window).focus(function(){c(),clearInterval(a),i||(a=setInterval(l,3e3))}).blur(function(){clearInterval(a),i=!1}),c()});
+        $(()=>{let t=$(".ima-wrap-5"),e=$(".right-arrow"),i=0;function n(){++i===t.length&&(i=0),e.click(),a()}function a(e=1){let l=$(t[i]),r=l.data("text"),c=r.slice(0,e);setTimeout(()=>{if(++e>r.length){setTimeout(n,3200);return}a(e)},200),$(".ima-heading-text-span").text(c)}a()});
     </script>
 </body>
 
