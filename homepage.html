@@ -2086,7 +2086,7 @@
         integrity="sha384-bjyNIOqAKScdeQ3THsDZLGagNN56B4X2Auu9YZIGu+tA/PlggMk4jbWruG/P6zYj"
         crossorigin="anonymous"></script>
     <script type="text/javascript" >
-        $(()=>{let t=$(".ima-wrap-5"),n=$(".right-arrow"),e=0,i=setInterval(a,3e3);function a(){++e===t.length&&(e=0),n.click(),l()}function l(){let n=$(t[e]),i=n.data("text"),a=i[0];a=a.split("");let l=0,c=setInterval(()=>{if(l===i.length){clearInterval(c);return}a[l]=i[l],l++,$(".ima-heading-text-span").text(a.join(""))},1200/i.length);$(".ima-heading-text-span").text(a)}$(window).focus(function(){l(),clearInterval(i),i=setInterval(a,3e3)}).blur(function(){clearInterval(i)}),l()});
+        $(()=>{let t=$(".ima-wrap-5"),n=$(".right-arrow"),e=0,i=!1,a=setInterval(l,3e3);function l(){i=!0,++e===t.length&&(e=0),n.click(),c()}function c(){let n=$(t[e]),i=n.data("text"),a=i[0];a=a.split("");let l=0,c=setInterval(()=>{if(l===i.length){clearInterval(c);return}a[l]=i[l],l++,$(".ima-heading-text-span").text(a.join(""))},1200/i.length);$(".ima-heading-text-span").text(a)}$(window).focus(function(){c(),clearInterval(a),i||(a=setInterval(l,3e3))}).blur(function(){clearInterval(a),i=!1}),c()});
     </script>
 </body>
 
