@@ -2086,7 +2086,7 @@
         integrity="sha384-bjyNIOqAKScdeQ3THsDZLGagNN56B4X2Auu9YZIGu+tA/PlggMk4jbWruG/P6zYj"
         crossorigin="anonymous"></script>
     <script type="text/javascript" >
-        $(()=>{let t=$(".ima-wrap-5"),e=$(".right-arrow"),i=0;function n(){++i===t.length&&(i=0),e.click(),a()}function a(e=1){let l=$(t[i]),r=l.data("text"),c=r.slice(0,e);setTimeout(()=>{if(++e>r.length){setTimeout(n,3200);return}a(e)},200),$(".ima-heading-text-span").text(c)}a()});
+    $(()=>{let t=$(".menu-button-4.w-nav-button"),n=$(".ima-wrap-5"),e=$(".right-arrow"),a=0;function i(){++a===n.length&&(a=0),t.hasClass("w--open")?setTimeout(i,3200):(e.click(),l())}function l(t=1){let e=$(n[a]),o=e.data("text"),r=o.slice(0,t);setTimeout(()=>{if(++t>o.length){setTimeout(i,3200);return}l(t)},200),$(".ima-heading-text-span").text(r)}l()});
     </script>
 </body>
 
