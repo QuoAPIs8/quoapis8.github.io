@@ -15,6 +15,11 @@ const auth = fApp.auth();
 
 const ext = window.location.hostname === "127.0.0.1" ? ".html" : "";
 
+const consoleLog = (data) => {
+    if(window.location.hostname === "127.0.0.1"){
+        console.log(data);
+    }
+}
 
 // Aplicación Vue
 const app = Vue.createApp({
@@ -94,7 +99,7 @@ const app = Vue.createApp({
         },
 
         async signOut() {
-            console.log('Signing out...');
+            consoleLog('Signing out...');
             try {
                 await auth.signOut();
                 this.user = null;
@@ -113,9 +118,9 @@ const app = Vue.createApp({
                 
                 if (doc.exists) {
                     this.userData = doc.data();
-                    console.log("User data:", this.userData);
+                    consoleLog("User data:", this.userData);
                 } else {
-                    console.log("No such document!");
+                    consoleLog("No such document!");
                 }
             } catch (error) {
                 console.error("Error getting user data:", error);
@@ -130,7 +135,7 @@ const app = Vue.createApp({
                     .where("users", "array-contains", auth.currentUser.uid)
                     .get();
                 
-                console.log("Medical centers found:", querySnapshot.docs.length);
+                consoleLog("Medical centers found:", querySnapshot.docs.length);
                 
                 this.medicalCenters = querySnapshot.docs.map(doc => {
                     return { id: doc.id, ...doc.data()};
@@ -172,7 +177,7 @@ const app = Vue.createApp({
                     await this.getMedicalCenterTrials();
                     this.loading = false;
                 } else {
-                    console.log("No such document!");
+                    consoleLog("No such document!");
                     this.loading = false;
                 }
             } catch (error) {
@@ -184,7 +189,7 @@ const app = Vue.createApp({
             
             try {
                 const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials_center').get();
-                console.log("Medical center trials:", doc.docs);
+                consoleLog("Medical center trials:", doc.docs);
                 if (doc.docs.length > 0) {
                     this.medicalCenter.trials = await Promise.all(doc.docs.map(async doc => {
                         let contact = {};
@@ -193,9 +198,9 @@ const app = Vue.createApp({
                         }
                         return { id: doc.id, ...doc.data(), contact };
                     }));
-                    console.log("Medical center data:", this.medicalCenter);
+                    consoleLog("Medical center data:", this.medicalCenter);
                 } else {
-                    console.log("No such document!");
+                    consoleLog("No such document!");
                 }
             } catch (error) {
                 console.error("Error getting medical center data:", error);
@@ -210,9 +215,9 @@ const app = Vue.createApp({
                 
                 if (doc.exists) {
                     this.trial = {id: doc.id, ...doc.data()};
-                    console.log("Medical center trial data:", this.trial);
+                    consoleLog("Medical center trial data:", this.trial);
                 } else {
-                    console.log("No such document!");
+                    consoleLog("No such document!");
                 }
             } catch (error) {
                 console.error("Error getting medical center trial data:", error);
@@ -297,14 +302,14 @@ const app = Vue.createApp({
             
             try {
                 const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').get();
-                console.log("Medical center team members:", doc.docs);
+                consoleLog("Medical center team members:", doc.docs);
                 if (doc.docs.length > 0) {
                     this.medicalCenter.team_members = doc.docs.map(doc => {
                         return { id: doc.id, ...doc.data()};
                     });
-                    console.log("Medical center data:", this.medicalCenter);
+                    consoleLog("Medical center data:", this.medicalCenter);
                 } else {
-                    console.log("No such document!");
+                    consoleLog("No such document!");
                 }
             } catch (error) {
                 console.error("Error getting medical center data:", error);
@@ -321,9 +326,9 @@ const app = Vue.createApp({
                     this.teamMember = {id: doc.id, ...doc.data()};
 
 
-                    console.log("Medical center team member data:", this.teamMember);
+                    consoleLog("Medical center team member data:", this.teamMember);
                 } else {
-                    console.log("No such document!");
+                    consoleLog("No such document!");
                 }
             } catch (error) {
                 console.error("Error getting medical center team member data:", error);
@@ -399,14 +404,14 @@ const app = Vue.createApp({
 
         async getTeamMember(data){
             if (!auth.currentUser || !data || !this.medicalCenter.id) return "";
-            console.log(data.id)
+            consoleLog(data.id)
 
             if(this.medicalCenter.team_members && this.medicalCenter.team_members.length > 0){
                 return this.medicalCenter.team_members.find(teamMember => teamMember.id == data.id);
             }
             
             const teamMember = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').doc(data.id).get();
-            console.log(teamMember.data());
+            consoleLog(teamMember.data());
             return teamMember.data();
         },
 
@@ -420,7 +425,7 @@ const app = Vue.createApp({
         checkUser() {
             auth.onAuthStateChanged(async (user) => {
                 this.user = user;
-                console.log(this.pathname, this.user);
+                consoleLog(this.pathname, this.user);
                 if (user) {
                     if(this.pathname == '' || this.pathname == 'index.html'){
                         this.dataMode = 'form';
@@ -477,7 +482,7 @@ const app = Vue.createApp({
         }
     },
     mounted() {
-        console.log('Init App');
+        consoleLog('Init App');
         this.checkUser();
         const dataHideEl = document.querySelectorAll("[data-hide]");
         dataHideEl.forEach(el => {
