@@ -474,7 +474,7 @@ const app = Vue.createApp({
                         }
                     }
                 }else{
-                    if(this.pathname != '' || this.pathname != 'index.html'){
+                    if(this.pathname != '' && this.pathname != 'index.html'){
                         window.location.href = '/';
                     }
                 }
