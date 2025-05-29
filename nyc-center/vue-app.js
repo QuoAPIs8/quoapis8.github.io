@@ -132,7 +132,7 @@ const app = Vue.createApp({
             
             try {
                 const querySnapshot = await db.collection('medical_centers')
-                    .where("users", "array-contains", auth.currentUser.uid)
+                    //.where("users", "array-contains", auth.currentUser.uid)
                     .get();
                 
                 consoleLog("Medical centers found:", querySnapshot.docs.length);
