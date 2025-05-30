@@ -134,23 +134,8 @@ select,
 
 @media screen and (max-width: 479px) {
     .moj-wrap-1-4 {
-        & thead, & tbody{
-            display: contents;
-        }
-        & table tr > *{
-            display: block;
-            padding-right: 1em;
-        }
-        & table tr > *{
-            padding-left: 1em;
-        }
-        & table tr {
-            display: table-cell;
-            vertical-align: top;
-        }
-        & .moj-text-7, & .moj-text-6{
-            min-height: 12px;
-            min-width: max-content;
+        & table {
+            min-width: 600px;
         }
     }
 }
