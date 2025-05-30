@@ -49,8 +49,8 @@ const app = Vue.createApp({
                 phone: '+12345678909',
             },
             loginForm: {
-                email: 'ylayalysalas@gmail.com',
-                password: '123456',
+                email: '',
+                password: '',
                 error: null,
                 success: false,
                 loading: false,
