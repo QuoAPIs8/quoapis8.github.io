@@ -15,9 +15,9 @@ const auth = fApp.auth();
 
 const ext = window.location.hostname === "127.0.0.1" ? ".html" : "";
 
-const consoleLog = (data) => {
+const consoleLog = (data, data1) => {
     if(window.location.hostname === "127.0.0.1"){
-        console.log(data);
+        console.log(data, data1);
     }
 }
 
@@ -74,7 +74,10 @@ const app = Vue.createApp({
         };
     },
     methods: {
-        async signIn() {
+        async signIn(ev) {
+            ev.preventDefault();
+            consoleLog(ev);
+
             try {
                 this.loginForm.loading = true;
                 this.loginForm.error = null;
@@ -88,14 +91,13 @@ const app = Vue.createApp({
                 this.user = userCredential.user;
                 this.loginForm.success = true;
                 
-                await this.getUserData();
-                await this.getMedicalCenters();
             } catch (error) {
                 console.error(error.code, error.message);
                 this.loginForm.error = error.message;
             } finally {
                 this.loginForm.loading = false;
             }
+            return false;
         },
 
         async signOut() {
@@ -103,6 +105,9 @@ const app = Vue.createApp({
             try {
                 await auth.signOut();
                 this.user = null;
+                localStorage.removeItem('medicalCenter');
+                localStorage.removeItem('medicalCenterTrial');
+                localStorage.removeItem('medicalCenterTeamMember');
             } catch (error) {
                 console.error(error.code, error.message);
             } finally {
@@ -132,7 +137,7 @@ const app = Vue.createApp({
             
             try {
                 const querySnapshot = await db.collection('medical_centers')
-                    //.where("users", "array-contains", auth.currentUser.uid)
+                    // .where("users", "array-contains", auth.currentUser.uid)
                     .get();
                 
                 consoleLog("Medical centers found:", querySnapshot.docs.length);
@@ -188,7 +193,7 @@ const app = Vue.createApp({
             if (!auth.currentUser) return;
             
             try {
-                const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials_center').get();
+                const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').get();
                 consoleLog("Medical center trials:", doc.docs);
                 if (doc.docs.length > 0) {
                     this.medicalCenter.trials = await Promise.all(doc.docs.map(async doc => {
@@ -211,7 +216,7 @@ const app = Vue.createApp({
             if (!auth.currentUser) return;
             
             try {
-                const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials_center').doc(id).get();
+                const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc(id).get();
                 
                 if (doc.exists) {
                     this.trial = {id: doc.id, ...doc.data()};
@@ -245,7 +250,7 @@ const app = Vue.createApp({
                     key_team_contact: 'ivXQazySkKSn41TuMCNn_team2'
                 };
                 localStorage.removeItem('medicalCenterTrial');
-                window.location.href = '/table-template?mode=trial';
+                window.location.href = '/dashboard?mode=trial';
             }, 1000);
         },
         async setMedicalCenterTrial(){
@@ -258,8 +263,8 @@ const app = Vue.createApp({
             that.trial.contact = contactRef;
             
             const trialDoc = this.dataForm === 'new' ? 
-                db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials_center').doc()
-                : db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials_center').doc(that.trial.id);
+                db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc()
+                : db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc(that.trial.id);
 
             return trialDoc.set(that.trial)
             .then(this.initMedicalCenterTrial)
@@ -277,7 +282,7 @@ const app = Vue.createApp({
 
             if (!auth.currentUser) return;
             
-            const trialDoc = db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials_center').doc(this.trial.id);
+            const trialDoc = db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc(this.trial.id);
             return trialDoc.delete()
                 .then(() => {
                     this.deleteStatus.success = true;
@@ -293,8 +298,8 @@ const app = Vue.createApp({
         },
 
         changeMedicalCenterTrial(trial){
-            localStorage.setItem('medicalCenterTrial', JSON.stringify(trial));
-            window.location.href = '/form-template' + ext;
+            // localStorage.setItem('medicalCenterTrial', JSON.stringify(trial));
+            // window.location.href = '/form-template' + ext;
         },
 
         async getMedicalCenterTeamMembers(){
@@ -353,7 +358,7 @@ const app = Vue.createApp({
                     phone: '+12345678909',
                 };
                 localStorage.removeItem('medicalCenterTeamMember');
-                window.location.href = '/table-template' + ext;
+                window.location.href = '/dashboard' + ext;
             }, 1000);
         },
 
@@ -398,8 +403,8 @@ const app = Vue.createApp({
         },
 
         changeMedicalCenterTeamMember(teamMember){
-            localStorage.setItem('medicalCenterTeamMember', JSON.stringify(teamMember));
-            window.location.href = '/form-team-template' + ext;
+            // localStorage.setItem('medicalCenterTeamMember', JSON.stringify(teamMember));
+            // window.location.href = '/form-team-template' + ext;
         },
 
         async getTeamMember(data){
@@ -421,6 +426,139 @@ const app = Vue.createApp({
 
             this.confirmDeletePopUp = true;
         },
+
+        insertTeamMembers(){
+            const temas = [
+                {
+                    "name": "Dr. Eleanor Vance",
+                    "email": "eleanor.vance@yale.edu",
+                    "phone": "(203) 555-0301",
+                    "role": "Director of Medical Oncology"
+                },
+                {
+                    "name": "Dr. Samuel Greene",
+                    "email": "samuel.greene@yale.edu",
+                    "phone": "(203) 555-0302",
+                    "role": "Chief of Surgical Oncology"
+                },
+                {
+                    "name": "Isabelle Moreau",
+                    "email": "isabelle.moreau@yale.edu",
+                    "phone": "(203) 555-0303",
+                    "role": "Oncology Clinical Nurse Specialist"
+                },
+                {
+                    "name": "Dr. Charles Wright",
+                    "email": "charles.wright@yale.edu",
+                    "phone": "(203) 555-0304",
+                    "role": "Head of Radiation Oncology"
+                },
+                {
+                    "name": "Dr. Aisha Khan",
+                    "email": "aisha.khan@yale.edu",
+                    "phone": "(203) 555-0305",
+                    "role": "Hematologic Malignancies Specialist"
+                },
+                {
+                    "name": "Marcus Choi",
+                    "email": "marcus.choi@yale.edu",
+                    "phone": "(203) 555-0306",
+                    "role": "Cancer Genomics Researcher"
+                },
+                {
+                    "name": "Dr. Olivia Bennett",
+                    "email": "olivia.bennett@yale.edu",
+                    "phone": "(203) 555-0307",
+                    "role": "Pediatric Oncologist"
+                },
+                {
+                    "name": "Liam O'Connell",
+                    "email": "liam.oconnell@yale.edu",
+                    "phone": "(203) 555-0308",
+                    "role": "Patient Support Services Coordinator"
+                },
+                {
+                    "name": "Dr. Hannah Jorgenson",
+                    "email": "hannah.jorgenson@yale.edu",
+                    "phone": "(203) 555-0309",
+                    "role": "Thoracic Oncology Lead"
+                },
+                {
+                    "name": "David Rodriguez",
+                    "email": "david.rodriguez@yale.edu",
+                    "phone": "(203) 555-0310",
+                    "role": "Clinical Trials Office Manager"
+                },
+                {
+                    "name": "Dr. Kenji Tanaka",
+                    "email": "kenji.tanaka@yale.edu",
+                    "phone": "(203) 555-0311",
+                    "role": "GI Oncology Specialist"
+                },
+                {
+                    "name": "Fatima Al-Jamil",
+                    "email": "fatima.aljamil@yale.edu",
+                    "phone": "(203) 555-0312",
+                    "role": "Oncology Pharmacist"
+                },
+                {
+                    "name": "Dr. Nora Fitzgerald",
+                    "email": "nora.fitzgerald@yale.edu",
+                    "phone": "(203) 555-0313",
+                    "role": "Director of Cancer Research"
+                },
+                {
+                    "name": "Benjamin Carter",
+                    "email": "benjamin.carter@yale.edu",
+                    "phone": "(203) 555-0314",
+                    "role": "Data Analyst for Clinical Studies"
+                },
+                {
+                    "name": "Dr. Sofia Ivanova",
+                    "email": "sofia.ivanova@yale.edu",
+                    "phone": "(203) 555-0315",
+                    "role": "Breast Cancer Program Director"
+                },
+                {
+                    "name": "Ethan Schmidt",
+                    "email": "ethan.schmidt@yale.edu",
+                    "phone": "(203) 555-0316",
+                    "role": "Community Outreach Coordinator"
+                }
+            ];
+
+            temas.forEach(async (teamMember) => {
+                const teamMemberDoc = db.collection('medical_centers').doc("G4ebUF50yCTzMD92kHc3").collection('team_members').doc();
+
+                teamMemberDoc.set(teamMember)
+                .then(() => {
+                    console.log("Team member added successfully");
+                })
+                .catch((error) => {
+                    console.error("Error adding team member: ", error);
+                });
+            });
+        },
+        
+        async actualiceTrials(){
+            const medicalCenters = await db.collection('medical_centers').get();
+            medicalCenters.forEach(async (medicalCenter) => {
+                const trials = await db.collection('medical_centers').doc(medicalCenter.id).collection('trials').get();
+                trials.forEach(async (trial) => {
+                    const contactRef = db.collection('team_members').doc(trial.data().contact);
+                    console.log(trial.data().contact);
+                    db.collection('medical_centers').doc(medicalCenter.id).collection('trials').doc(trial.id).set({
+                        contact: contactRef
+                    })
+                    .then(() => {
+                        console.log("Trial updated successfully");
+                    })
+                    .catch((error) => {
+                        console.error("Error updating trial: ", error);
+                    });
+                });
+            });
+        },
         
         checkUser() {
             auth.onAuthStateChanged(async (user) => {
@@ -429,9 +567,9 @@ const app = Vue.createApp({
                 if (user) {
                     if(this.pathname == '' || this.pathname == 'index.html'){
                         this.dataMode = 'form';
-                        window.location.href = '/table-template' + ext;
+                        window.location.href = '/dashboard' + ext;
                     }
-                    if(this.pathname == 'table-template' + ext){
+                    if(this.pathname == 'dashboard' + ext){
                         this.getUserData();
                         this.getMedicalCenters();
                         this.dataMode = 'team';
@@ -442,7 +580,7 @@ const app = Vue.createApp({
                         const mode = urlParams.get('mode');
 
                         if(mode){
-                            window.history.replaceState(null, null, '/table-template');
+                            window.history.replaceState(null, null, '/dashboard');
                         }
                         
                         if(mode == 'trial'){
@@ -479,15 +617,14 @@ const app = Vue.createApp({
                     }
                 }
             });
-        }
+        },
     },
     mounted() {
         consoleLog('Init App');
         this.checkUser();
-        const dataHideEl = document.querySelectorAll("[data-hide]");
-        dataHideEl.forEach(el => {
-            el.removeAttribute("data-hide");
-        });
+        const container = document.getElementById('app');
+        container.classList.remove('nyc-app');
+
     }
 });
 

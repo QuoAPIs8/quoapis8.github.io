@@ -1,6 +1,6 @@
 /* Estilos para la aplicación Vue */
 
-[data-hide]{
+#app:not([data-v-app]) [data-hide]{
     display: none !important;
 }
 
@@ -90,55 +90,6 @@ select,
     height: 100%;
 }
 
-.moj-wrap-1-4 {
-    & table {
-        width: 100%;
-        margin-left: .71em;
-        margin-right: .71em;
-    }
-
-    & tr {
-        border-bottom: 1px solid #f0f0f1;
-        position: relative;
-
-        &:hover {
-            cursor: pointer;
-
-            &::after {
-                content: "";
-                display: block;
-                height: 100%;
-                width: 100%;
-                background-color: #F0F0F1;
-                cursor: pointer;
-                position: absolute;
-                inset: 0;
-                z-index: -1;
-                border-radius: 5px;
-                transform: scale(1.03, 1.1);
-            }
-        }
-    }
-
-    & thead tr:hover {
-        cursor: default;
-
-        &::after {
-            display: none;
-        }
-    }
-
-    & th {
-        padding: 1.14em 0px;
-        text-align: left;
-    }
-
-    & td {
-        padding: 1.14em 0px;
-        text-align: left;
-    }
-}
-
 .pop-container-1{
     position: relative;
 }
@@ -170,9 +121,36 @@ select,
 
 }
 
+.placeholder{
+    mask-image: linear-gradient(to right, #f0ecec 50%, transparent);
+}
+
 
 @media screen and (max-width: 991px) {
     .lgn-wrap-1 {
         width: 100%;
+    }
+}
+
+@media screen and (max-width: 479px) {
+    .moj-wrap-1-4 {
+        & thead, & tbody{
+            display: contents;
+        }
+        & table tr > *{
+            display: block;
+            padding-right: 1em;
+        }
+        & table tr > *{
+            padding-left: 1em;
+        }
+        & table tr {
+            display: table-cell;
+            vertical-align: top;
+        }
+        & .moj-text-7, & .moj-text-6{
+            min-height: 12px;
+            min-width: max-content;
+        }
     }
 }
