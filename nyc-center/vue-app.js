@@ -454,6 +454,16 @@ const app = Vue.createApp({
                 });
         },
 
+        changeTeamMemberToTrial(teamMemberId) {
+            this.trial.key_team_contact = teamMemberId;
+            this.openUsersList = false;
+        },
+
+        getSelectedTeamMember(teamMemberId) {
+            const teamMember = this.medicalCenter && this.medicalCenter.team_members ? this.medicalCenter.team_members.find(teamMember => teamMember.id == teamMemberId) : null;
+            return teamMember ? teamMember.name : '';
+        },
+
         goToMedicalCenterTrial(trial) {
             if(this.isAllowUser()){
                 localStorage.setItem('medicalCenterTrial', JSON.stringify(trial));
@@ -715,17 +725,6 @@ const app = Vue.createApp({
                         this.confirmPassword
                     );
 
-                    this.confirmPassword = "";
-                    this.sendStatus.success = true;
-                    this.sendStatus.loading = false;
-
-                    setTimeout(() => {
-                        this.confirmPopUp = false;
-                        this.sendStatus.success = false;
-                        this.sendStatus.error = false;
-                        this.enabledBtn(ev, 'Create');
-                    }, 1000);
-
                 } catch (error) {
                     console.error("Error adding user: ", error.message);
                     this.sendStatus.loading = false;
@@ -763,6 +762,20 @@ const app = Vue.createApp({
                 }
                 this.formStatus.success = true;
                 this.enabledBtn(ev, 'Save');
+
+                if(this.dataForm === 'new') {
+                    this.sendStatus.success = true;
+                    this.sendStatus.loading = false;
+
+                    this.confirmPopUp = false;
+                    this.sendStatus.success = false;
+                    this.sendStatus.error = false;
+                    this.enabledBtn(ev, 'Create');
+                }else{
+                    this.sendStatus.success = true;
+                    this.sendStatus.loading = false;
+                }
+
                 this.initUser();
 
             } catch (error) {
@@ -881,7 +894,7 @@ const app = Vue.createApp({
                    this.getMedicalCenters();
                 }
                 if(mode == 'init'){
-                    localStorage.removeItem('mode');
+                    localStorage.setItem('mode', 'team');
                     localStorage.removeItem('medicalCenter');
                     this.dataMode = 'team';
                     this.medicalCenter = {};
