@@ -15,13 +15,13 @@ const auth = fApp.auth();
 
 const ext = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? ".html" : "";
 
-const consoleLog = (data, data1 = "") => {
+const consoleLog = (data, data1) => {
     if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
         console.log(data, data1);
     }
 }
 
-const consoleError = (data, data1 = "") => {
+const consoleError = (data, data1) => {
     if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
         console.error(data, data1);
     }
@@ -472,7 +472,12 @@ const app = Vue.createApp({
             return teamMember ? teamMember.name : '';
         },
 
-        goToMedicalCenterTrial(trial) {
+        goToMedicalCenterTrial(ev, trial) {
+            const parent = ev.target.parentNode;
+
+            if(parent.tagName == 'A' || parent.tagName == 'a'){
+                return;
+            }
             if(this.isAllowUser()){
                 localStorage.setItem('medicalCenterTrial', JSON.stringify(trial));
                 window.location.href = '/trial' + ext;   
@@ -967,7 +972,7 @@ const app = Vue.createApp({
                         this.dataMode = 'trials';
                         const trial = localStorage.getItem('medicalCenterTrial');
                         this.dataForm = 'new';
-                        if (trial) {
+                        if (trial && trial != 'undefined') {
                             this.trial = JSON.parse(trial);
                             this.getMedicalCenterTrialById(this.trial.id);
                             this.dataForm = 'edit';
@@ -1065,4 +1070,3 @@ const app = Vue.createApp({
 });
 
 app.mount('#app');
-
