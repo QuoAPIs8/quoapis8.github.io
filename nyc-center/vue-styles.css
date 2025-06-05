@@ -4,6 +4,10 @@
     display: none !important;
 }
 
+#app:not([data-v-app]) [data-show="init"]{
+    display: block !important;
+}
+
 .w-input:focus,
 .w-select:focus {
     border-color: transparent;
@@ -125,6 +129,75 @@ select,
     mask-image: linear-gradient(to right, #f0ecec 50%, transparent);
 }
 
+.moj-text-1-nyc{
+    color: #6E6E6E;
+    background-color: #EDEDF3;
+    font-size: 1em;
+    padding: 0px .5em;
+    border-radius: 5px;
+}
+
+    & .moj-wrap-6{
+        gap: .6em;
+    }
+
+.moj-right{
+
+
+    & .moj-toggle-1{
+        justify-content: flex-end;
+    }
+}
+
+.moj-wrap-5{
+    cursor: pointer;
+}
+
+#init{
+    position: fixed;
+    inset: 0;
+    background-color: #fff;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.daf-wrap-5-select{
+    cursor: pointer;
+    position: relative;
+}
+
+.daf-wrap-5-select nav{
+    position: absolute;
+    top: 110%;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    cursor: pointer;
+    transition: all .3s ease-in-out;
+    border: 1px solid #f0f0f0;
+    border-radius: .71em;
+    box-shadow: 0 4px 20px #76767640;
+    padding: .5em;
+
+    & > div:hover{
+        background-color: #EDEDF3;
+    }
+}
+
+.daf-input-ss{
+    background-color: #EDEDF3;
+}
+
+.w-input[disabled]:not(.w-input-disabled){
+    background-color: transparent;
+    color: #6E6E6E;
+}
+
+.daf-wrap-55{
+    font-size: 1.2em;
+}
 
 @media screen and (max-width: 991px) {
     .lgn-wrap-1 {
