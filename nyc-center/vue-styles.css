@@ -1,3 +1,5 @@
+/* Estilos para la aplicación Vue */
+
 #app:not([data-v-app]) [data-hide]{
     display: none !important;
 }
@@ -216,6 +218,26 @@ select,
     position: absolute;
     inset: 0;
     z-index: 2;
+}
+
+.moj-toggle-1 > .moj-text-1{
+    position: relative;
+    display: block;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .21em;
+    
+    &::after{
+        content: "";
+        position: relative;
+        width: .7em;
+        height: .7em;
+        z-index: 2;
+        background-image: url(https://cdn.prod.website-files.com/6810f8b3b925ddd8e243dab1/681508e2b1e3f654c611ecaa_Frame%204.svg);
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
 }
 
 @media screen and (max-width: 991px) {
