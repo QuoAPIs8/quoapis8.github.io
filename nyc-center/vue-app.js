@@ -1,4 +1,4 @@
-// Configuración de Firebase
+
 const firebaseConfig = {
     apiKey: "AIzaSyCoSjpYuQM_vjVyOY3QdeMQCzqymQuJ8K8",
     authDomain: "nyc-cancer-trial---dev.firebaseapp.com",
@@ -8,7 +8,6 @@ const firebaseConfig = {
     appId: "1:567320801353:web:5747ea974fba184466cf98"
 };
 
-// Inicialización de Firebase
 const fApp = firebase.initializeApp(firebaseConfig);
 const db = fApp.firestore();
 const auth = fApp.auth();
