@@ -232,7 +232,7 @@ const app = Vue.createApp({
         },
 
 
-        setMedicalCenter() {
+        setMedicalCenter(ev) {
             this.formStatus.success = null;
             this.formStatus.error = null;
 
@@ -241,25 +241,32 @@ const app = Vue.createApp({
             const isValid = this.validateForm();
             if (!isValid) return;
 
+            this.disabledBtn(ev, 'Saving...');
+
             const centerDoc = this.dataForm === 'new' ?
                 db.collection('medical_centers').doc()
                 : db.collection('medical_centers').doc(this.center.id);
 
             centerDoc.set(this.center)
-                .then(this.initMedicalCenter)
+                .then(() => {
+                    this.initMedicalCenter();
+                    this.enabledBtn(ev, 'Save');
+                })
                 .catch((error) => {
                     this.formStatus.error = error;
                     console.error("Error adding center: ", error);
+                    this.enabledBtn(ev, 'Save');
                 });
         },
 
-        deleteMedicalCenter() {
+        deleteMedicalCenter(ev) {
             this.sendStatus.success = null;
             this.sendStatus.error = null;
 
             if (!auth.currentUser) return;
 
             this.sendStatus.loading = true;
+            this.disabledBtn(ev, 'Deleting...');
 
             const centerDoc = db.collection('medical_centers').doc(this.center.id);
             centerDoc.delete()
@@ -268,11 +275,13 @@ const app = Vue.createApp({
                     this.sendStatus.success = true;
 
                     this.initMedicalCenter(true);
+                    this.enabledBtn(ev, 'Delete');
                 })
                 .catch((error) => {
                     this.sendStatus.error = error;
                     console.error("Error deleting center: ", error);
                     this.sendStatus.loading = false;
+                    this.enabledBtn(ev, 'Delete');
                 });
         },
 
@@ -392,7 +401,8 @@ const app = Vue.createApp({
                 this.goToDashboard('trials');
             }, 1000);
         },
-        async setMedicalCenterTrial() {
+
+        async setMedicalCenterTrial(ev) {
             this.formStatus.success = null;
             this.formStatus.error = null;
 
@@ -401,6 +411,7 @@ const app = Vue.createApp({
 
             if (!auth.currentUser || !this.medicalCenter) return;
             const that = this;
+            this.disabledBtn(ev, 'Saving...');
 
             if (that.trial.key_team_contact) {
                 const contactRef = db.collection('team_members').doc(that.trial.key_team_contact);
@@ -411,23 +422,26 @@ const app = Vue.createApp({
                 db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc()
                 : db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc(that.trial.id);
 
-            return trialDoc.set(that.trial)
+            trialDoc.set(that.trial)
                 .then(() => {
                     this.initMedicalCenterTrial();
+                    that.enabledBtn(ev, 'Save');
                 })
                 .catch((error) => {
                     that.formStatus.error = error;
                     console.error("Error adding trial: ", error);
+                    that.enabledBtn(ev, 'Save');
                 });
         },
 
 
-        async deleteMedicalCenterTrial() {
+        async deleteMedicalCenterTrial(ev) {
             this.sendStatus.success = null;
             this.sendStatus.error = null;
             this.sendStatus.loading = true;
 
             if (!auth.currentUser || !this.medicalCenter) return;
+            this.disabledBtn(ev, 'Deleting...');
 
             const trialDoc = db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc(this.trial.id);
             return trialDoc.delete()
@@ -436,11 +450,13 @@ const app = Vue.createApp({
                     this.sendStatus.loading = false;
 
                     this.initMedicalCenterTrial(true);
+                    this.enabledBtn(ev, 'Delete');
                 })
                 .catch((error) => {
                     this.sendStatus.error = error;
                     console.error("Error deleting trial: ", error);
                     this.sendStatus.loading = false;
+                    this.enabledBtn(ev, 'Delete');
                 });
         },
 
@@ -501,35 +517,42 @@ const app = Vue.createApp({
             }, 600);
         },
 
-        async setMedicalCenterTeamMember() {
+        async setMedicalCenterTeamMember(ev) {
             this.formStatus.success = null;
             this.formStatus.error = null;
 
             const isValid = this.validateForm();
             if (!isValid) return;
 
-
             if (!auth.currentUser || !this.medicalCenter) return;
             const teamMember = this.teamMember;
+
+            this.disabledBtn(ev, 'Saving...');
 
             const teamMemberDoc = this.dataForm === 'new' ?
                 db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').doc()
                 : db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').doc(teamMember.id);
 
             return teamMemberDoc.set(teamMember)
-                .then(this.initMedicalCenterTeamMember)
+                .then(() => {
+                    this.initMedicalCenterTeamMember();
+                    this.enabledBtn(ev, 'Save');
+                })
                 .catch((error) => {
                     this.formStatus.error = error;
                     console.error("Error adding team member: ", error);
+                    this.enabledBtn(ev, 'Save');
                 });
         },
 
-        deleteMedicalCenterTeamMember() {
+        deleteMedicalCenterTeamMember(ev) {
             this.sendStatus.success = null;
             this.sendStatus.error = null;
             this.sendStatus.loading = true;
 
             if (!auth.currentUser) return;
+
+            this.disabledBtn(ev, 'Deleting...');
 
             const teamMemberDoc = db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').doc(this.teamMember.id);
             teamMemberDoc.delete()
@@ -538,11 +561,13 @@ const app = Vue.createApp({
                     this.sendStatus.loading = false;
 
                     this.initMedicalCenterTeamMember(true);
+                    this.enabledBtn(ev, 'Delete');
                 })
                 .catch((error) => {
                     this.sendStatus.error = error;
                     console.error("Error deleting team member: ", error);
                     this.sendStatus.loading = false;
+                    this.enabledBtn(ev, 'Delete');
                 });
         },
 
@@ -655,7 +680,7 @@ const app = Vue.createApp({
             }
         },
 
-        async setUser() {
+        async setUser(ev) {
             const isValid = this.validateForm();
             if (!isValid || (!this.confirmPassword && this.dataForm === 'new')) return;
 
@@ -669,10 +694,15 @@ const app = Vue.createApp({
             this.sendStatus.loading = true;
             this.formStatus.loading = true;
 
+            
+
             if (this.dataForm === 'new') {
+                this.disabledBtn(ev, 'Creating...');
+
                 if( this.formUser.password !== this.formUser.confirmPassword) {
                     this.formStatus.error = true;
                     this.formStatus.loading = false;
+                    this.enabledBtn(ev, 'Create');
                     return;
                 }
 
@@ -699,15 +729,19 @@ const app = Vue.createApp({
                         this.confirmPopUp = false;
                         this.sendStatus.success = false;
                         this.sendStatus.error = false;
+                        this.enabledBtn(ev, 'Create');
                     }, 1000);
 
                 } catch (error) {
                     console.error("Error adding user: ", error.message);
                     this.sendStatus.loading = false;
                     this.sendStatus.error = true;
+                    this.enabledBtn(ev, 'Create');
                     return;
                 }
             }
+
+            this.disabledBtn(ev, 'Saving...');
 
             const userDoc = db.collection('users').doc(this.formUser.id);
 
@@ -715,8 +749,6 @@ const app = Vue.createApp({
                 name: this.formUser.name,
                 role: this.formUser.isAdmin ? 'ADMIN' : 'VIEWER',
             }
-
-
 
             try {
                 if (this.dataForm === 'new') {
@@ -736,12 +768,14 @@ const app = Vue.createApp({
                     await this.updateMedicalCenterUsers(removeCenters[i], this.formUser.id, 'remove');
                 }
                 this.formStatus.success = true;
+                this.enabledBtn(ev, 'Save');
                 this.initUser();
 
             } catch (error) {
                 this.formStatus.error = true;
                 console.error("Error adding user: ", error.message);
                 this.formStatus.loading = false;
+                this.enabledBtn(ev, 'Save');
             }
 
         },
@@ -793,14 +827,14 @@ const app = Vue.createApp({
             }
         },
 
-        confirmCreateUser() {
+        confirmCreateUser(ev) {
             if(this.dataForm === 'new' && this.formUser.password !== this.formUser.confirmPassword) {
                 this.formStatus.error = true;
                 return;
             }
 
             if(this.dataForm === 'edit') {
-                this.setUser();
+                this.setUser(ev);
                 return;
             }
 
@@ -861,6 +895,15 @@ const app = Vue.createApp({
             return this.isAdmin || (this.medicalCenter && this.medicalCenter.users && this.medicalCenter.users.includes(auth.currentUser.uid));
         },
 
+        disabledBtn(ev, text = 'Saving...') {
+            ev.target.innerText = text;
+            ev.target.classList.add('disabled-btn');
+        },
+
+        enabledBtn(ev, text = 'Save') {
+            ev.target.innerText = text;
+            ev.target.classList.remove('disabled-btn');
+        },
 
         checkUser() {
             auth.onAuthStateChanged(async (user) => {
