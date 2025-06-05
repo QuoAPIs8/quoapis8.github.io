@@ -1,5 +1,3 @@
-/* Estilos para la aplicación Vue */
-
 #app:not([data-v-app]) [data-hide]{
     display: none !important;
 }
@@ -199,6 +197,17 @@ select,
     font-size: 1.2em;
 }
 
+[data-form-validate="true"] input{
+    /* border-bottom-color: red; */
+}
+
+.disabled-btn{
+    cursor: not-allowed;
+    opacity: .5;
+}
+
+
+
 @media screen and (max-width: 991px) {
     .lgn-wrap-1 {
         width: 100%;
@@ -209,6 +218,14 @@ select,
     .moj-wrap-1-4 {
         & table {
             min-width: 600px;
+        }
+    }
+
+    .moj-wrap-3.moj-right{
+        flex-flow: column-reverse;
+
+        & .moj-wrap-5{
+            text-align: right;
         }
     }
 }
