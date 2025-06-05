@@ -892,11 +892,13 @@ const app = Vue.createApp({
         disabledBtn(ev, text = 'Saving...') {
             ev.target.innerText = text;
             ev.target.classList.add('disabled-btn');
+            ev.target.parentNode.classList.add('disabled-actions');
         },
 
         enabledBtn(ev, text = 'Save') {
             ev.target.innerText = text;
             ev.target.classList.remove('disabled-btn');
+            ev.target.parentNode.classList.remove('disabled-actions');
         },
 
         checkUser() {
