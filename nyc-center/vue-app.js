@@ -13,10 +13,10 @@ const fApp = firebase.initializeApp(firebaseConfig);
 const db = fApp.firestore();
 const auth = fApp.auth();
 
-const ext = window.location.hostname === "127.0.0.1" ? ".html" : "";
+const ext = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? ".html" : "";
 
 const consoleLog = (data, data1) => {
-    if(window.location.hostname === "127.0.0.1"){
+    if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
         console.log(data, data1);
     }
 }
@@ -25,13 +25,26 @@ const consoleLog = (data, data1) => {
 const app = Vue.createApp({
     data() {
         return {
+            init: false,
             user: null,
             userData: null,
+            isAdmin: false,
             medicalCenters: [],
-            medicalCenter: {
-                name: ' ',
-                location: ' ',
-                
+            users: [],
+            medicalCenter: {},
+            allTrials: [],
+            center: {
+                name: 'Lorem Ipsum',
+                research_unit_name: 'Lorem Ipsum',
+            },
+            formUser: {
+                name: 'Lorem Ipsum',
+                role: 'VIEW',
+                email: 'user@nyccancercenter.com',
+                password: '123456',
+                confirmPassword: '123456',
+                currentCenters: [],
+                medicalCenters: [],
             },
             trial: {
                 name: 'Lorem Ipsum',
@@ -43,54 +56,61 @@ const app = Vue.createApp({
                 key_team_contact: 'ivXQazySkKSn41TuMCNn_team2'
             },
             teamMember: {
-                fullname: 'Lorem Ipsum',
-                email: 'ylayalysalas@gmail.com',
+                name: 'Lorem Ipsum',
+                email: 'user@nyccancercenter.com',
                 role: 'Lorem Ipsum',
                 phone: '+12345678909',
             },
             loginForm: {
-                email: '',
-                password: '',
+                email: 'ylayalysalas@gmail.com',
+                password: '123456',
                 error: null,
                 success: false,
                 loading: false,
-                mode: 'physician'
+                mode: 'physician',
             },
             formStatus: {
                 error: null,
                 success: false,
-                loading: false
+                loading: false,
+                init: true
             },
-            deleteStatus: {
+            sendStatus: {
                 error: null,
                 success: false,
                 loading: false
             },
-            loading: false,
+            loading: true,
             dataMode: 'team',
             dataForm: 'new',
-            confirmDeletePopUp: false,
-            pathname: window.location.pathname.split('/').pop()
+            confirmPopUp: false,
+            pathname: window.location.pathname.split('/').pop(),
+            openUsersList: false,
+            confirmPassword: '',
+            dev: {
+                openNav: false
+            }
         };
     },
     methods: {
         async signIn(ev) {
             ev.preventDefault();
-            consoleLog(ev);
+
+            const isValid = this.validateForm();
+            if (!isValid) return;
 
             try {
                 this.loginForm.loading = true;
                 this.loginForm.error = null;
                 this.loginForm.success = null;
-                
-                const userCredential = await auth.signInWithEmailAndPassword(
-                    this.loginForm.email, 
+
+                await auth.signInWithEmailAndPassword(
+                    this.loginForm.email,
                     this.loginForm.password
                 );
-                
-                this.user = userCredential.user;
+
                 this.loginForm.success = true;
-                
+
             } catch (error) {
                 console.error(error.code, error.message);
                 this.loginForm.error = error.message;
@@ -101,81 +121,87 @@ const app = Vue.createApp({
         },
 
         async signOut() {
-            consoleLog('Signing out...');
             try {
                 await auth.signOut();
                 this.user = null;
                 localStorage.removeItem('medicalCenter');
                 localStorage.removeItem('medicalCenterTrial');
                 localStorage.removeItem('medicalCenterTeamMember');
+                localStorage.removeItem('formUser');
+                localStorage.removeItem('trial');
+                localStorage.removeItem('teamMember');
+                localStorage.removeItem('center');
+                localStorage.removeItem('mode');
             } catch (error) {
                 console.error(error.code, error.message);
             } finally {
                 window.location.href = '/';
             }
         },
-        
-        async getUserData() {
+
+
+        async getMedicalCenters(mC = null) {
             if (!auth.currentUser) return;
-            
-            try {
-                const doc = await db.collection('users').doc(auth.currentUser.uid).get();
-                
-                if (doc.exists) {
-                    this.userData = doc.data();
-                    consoleLog("User data:", this.userData);
-                } else {
-                    consoleLog("No such document!");
-                }
-            } catch (error) {
-                console.error("Error getting user data:", error);
-            }
-        },
-        
-        async getMedicalCenters() {
-            if (!auth.currentUser) return;
-            
+
             try {
                 const querySnapshot = await db.collection('medical_centers')
                     // .where("users", "array-contains", auth.currentUser.uid)
                     .get();
-                
-                consoleLog("Medical centers found:", querySnapshot.docs.length);
-                
+
+                const medicalCenter = localStorage.getItem('medicalCenter');
+                if(medicalCenter && medicalCenter !== 'null' && medicalCenter !== 'undefined' && medicalCenter !== null && medicalCenter !== undefined){
+                    this.medicalCenter = JSON.parse(medicalCenter);
+                }
+
                 this.medicalCenters = querySnapshot.docs.map(doc => {
-                    return { id: doc.id, ...doc.data()};
+                    return { id: doc.id, ...doc.data() };
                 });
 
-                if(this.medicalCenters.length > 0){
-                    const medicalCenter = localStorage.getItem('medicalCenter');
-                    if(medicalCenter){  
+                if (this.medicalCenters.length > 0) {
+                    
+                    const medicalCentersByUser = this.medicalCenters.filter(center => center.users && center.users.includes(auth.currentUser.uid));
+                    if (mC === false) {
+                        this.medicalCenter = {};
+                    } else if (medicalCenter && medicalCenter !== 'null' && medicalCenter !== 'undefined' && medicalCenter !== null && medicalCenter !== undefined) {
                         this.medicalCenter = JSON.parse(medicalCenter);
+                    } else if(medicalCentersByUser.length > 0){
+                        this.medicalCenter = medicalCentersByUser[0];
                     }else{
                         this.medicalCenter = this.medicalCenters[0];
                     }
 
                     await this.getMedicalCenterTeamMembers();
-                    await this.getMedicalCenterTrials();  
-                    this.loading = false;
-                }
+                    await this.getMedicalCenterTrials();
 
+                }
+                this.loading = false;
             } catch (error) {
                 console.error("Error getting medical centers:", error);
             }
         },
 
-        async getMedicalCenterById(id){
+        async getMedicalCenterById(id) {
             if (!auth.currentUser) return;
 
-            const el = document.querySelector('.moj-dropdown-1');
-            $(el).triggerHandler('w-close.w-dropdown');
+            this.closeNav();
+
+            const mC = this.medicalCenters.find(mC => mC.id === id);
+            this.medicalCenter = mC;
+
+            localStorage.setItem('medicalCenter', JSON.stringify(this.medicalCenter));
+
+            this.dataMode = this.dataMode === 'alltrials' || this.dataMode === 'trials' ? 'trials' : 'team';
+
+            if (!window.location.pathname.includes('/dashboard')) {
+                this.goToDashboard('team');
+            }
 
             this.loading = true;
             try {
                 const doc = await db.collection('medical_centers').doc(id).get();
-                
+
                 if (doc.exists) {
-                    this.medicalCenter = {id: doc.id, ...doc.data()};
+                    this.medicalCenter = { id: doc.id, ...doc.data() };
                     localStorage.setItem('medicalCenter', JSON.stringify(this.medicalCenter));
 
                     await this.getMedicalCenterTeamMembers();
@@ -189,21 +215,145 @@ const app = Vue.createApp({
                 console.error("Error getting medical center data:", error);
             }
         },
-        async getMedicalCenterTrials(){
+
+        async initMedicalCenter(isDelete = false) {
+            const that = this;
+            if (!isDelete)
+                that.formStatus.success = true;
+
+            setTimeout(() => {
+                if (isDelete) {
+                    that.confirmPopUp = false;
+                }
+
+                localStorage.removeItem('center');
+                this.goToDashboard('centers');
+            }, 1000);
+        },
+
+
+        setMedicalCenter() {
+            this.formStatus.success = null;
+            this.formStatus.error = null;
+
             if (!auth.currentUser) return;
-            
+
+            const isValid = this.validateForm();
+            if (!isValid) return;
+
+            const centerDoc = this.dataForm === 'new' ?
+                db.collection('medical_centers').doc()
+                : db.collection('medical_centers').doc(this.center.id);
+
+            centerDoc.set(this.center)
+                .then(this.initMedicalCenter)
+                .catch((error) => {
+                    this.formStatus.error = error;
+                    console.error("Error adding center: ", error);
+                });
+        },
+
+        deleteMedicalCenter() {
+            this.sendStatus.success = null;
+            this.sendStatus.error = null;
+
+            if (!auth.currentUser) return;
+
+            this.sendStatus.loading = true;
+
+            const centerDoc = db.collection('medical_centers').doc(this.center.id);
+            centerDoc.delete()
+                .then(() => {
+                    this.sendStatus.loading = false;
+                    this.sendStatus.success = true;
+
+                    this.initMedicalCenter(true);
+                })
+                .catch((error) => {
+                    this.sendStatus.error = error;
+                    console.error("Error deleting center: ", error);
+                    this.sendStatus.loading = false;
+                });
+        },
+
+        goToMedicalCenter(center) {
+            localStorage.setItem('center', JSON.stringify(center));
+            window.location.href = '/med-center' + ext;
+        },
+
+        getSelectedUsers(users) {
+            const medicalCenterUsers = users;
+            if (!medicalCenterUsers) return '';
+
+            const selectedUsers = this.users.filter(user => {
+                return medicalCenterUsers.includes(user.id);
+            });
+
+            return selectedUsers.map(user => user.name).join(', ');
+        },
+
+        changeUserToMedicalCenter(userId) {
+            if (!this.center.users) this.center.users = [];
+            if (this.center.users.includes(userId)) {
+                this.center.users = this.center.users.filter(user => user !== userId);
+            } else {
+                this.center.users.push(userId);
+            }
+        },
+
+        async getAllTrials() {
+            this.dataMode = 'alltrials';
+            this.closeNav();
+
+            this.medicalCenter = {
+                name: 'All',
+                research_unit_name: 'All',
+                id: 'alltrials'
+            }
+
+            let teamMembers = [];
+            try {
+                teamMembers = await db.collectionGroup('team_members').get();
+                teamMembers = teamMembers.docs.map(doc => {
+                    return { id: doc.id, ...doc.data() };
+                });
+            } catch (error) {
+                console.error("Error getting team members data:", error);
+            }
+
+            try {
+                const trials = await db.collectionGroup('trials').get();
+                this.allTrials = trials.docs.map(doc => {
+                    let contact = {};
+                    let medicalCenter = "";
+                    if (doc.data().contact && teamMembers) {
+                        contact = teamMembers.find(team => team.id == doc.data().contact.id);
+                    }
+                    if (doc.ref.parent.parent.id) {
+                        medicalCenter = this.medicalCenters.find(center => center.id == doc.ref.parent.parent.id);
+                    }
+                    return { id: doc.id, ...doc.data(), contact, medicalCenter };
+                });
+            } catch (error) {
+                console.error("Error getting trials data:", error);
+            }
+
+
+
+        },
+        async getMedicalCenterTrials() {
+            if (!auth.currentUser || !this.medicalCenter) return;
+
             try {
                 const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').get();
-                consoleLog("Medical center trials:", doc.docs);
                 if (doc.docs.length > 0) {
                     this.medicalCenter.trials = await Promise.all(doc.docs.map(async doc => {
                         let contact = {};
-                        if(doc.data().contact){
+                        if (doc.data().contact) {
                             contact = await this.getTeamMember(doc.data().contact);
-                        }
-                        return { id: doc.id, ...doc.data(), contact };
+                        }    
+                        return { id: doc.id, ...doc.data(), contact, key_team_contact: contact.id };
                     }));
-                    consoleLog("Medical center data:", this.medicalCenter);
                 } else {
                     consoleLog("No such document!");
                 }
@@ -212,15 +362,14 @@ const app = Vue.createApp({
             }
         },
 
-        async getMedicalCenterTrialById(id){
-            if (!auth.currentUser) return;
-            
+        async getMedicalCenterTrialById(id) {
+            if (!auth.currentUser || !this.medicalCenter) return;
+
             try {
                 const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc(id).get();
-                
+
                 if (doc.exists) {
-                    this.trial = {id: doc.id, ...doc.data()};
-                    consoleLog("Medical center trial data:", this.trial);
+                    this.trial = { id: doc.id, ...doc.data(), key_team_contact: doc.data().contact?.id };
                 } else {
                     consoleLog("No such document!");
                 }
@@ -229,90 +378,88 @@ const app = Vue.createApp({
             }
         },
 
-        async initMedicalCenterTrial(isDelete = false){
+        async initMedicalCenterTrial(isDelete = false) {
             const that = this;
-            if(!isDelete)
+            if (!isDelete)
                 that.formStatus.success = true;
+
             setTimeout(() => {
-                if(!isDelete){
-                    that.formStatus.success = false;
-                }else{
-                    that.confirmDeletePopUp = false;
+                if (isDelete) {
+                    that.confirmPopUp = false;
                 }
-                that.dataForm = 'new';
-                that.trial = {
-                    name: 'Lorem Ipsum',
-                    sponsors: 'Tiae Dor Asim',
-                    nct: 'NCT00000000',
-                    brief_moa: 'Lorem Ipsum',
-                    mutation_or_key_biomarker: 'Lorem Ipsum',
-                    pi_name: 'Dor Asimet',
-                    key_team_contact: 'ivXQazySkKSn41TuMCNn_team2'
-                };
+
                 localStorage.removeItem('medicalCenterTrial');
-                window.location.href = '/dashboard?mode=trial';
+                this.goToDashboard('trials');
             }, 1000);
         },
-        async setMedicalCenterTrial(){
+        async setMedicalCenterTrial() {
             this.formStatus.success = null;
             this.formStatus.error = null;
-            if (!auth.currentUser) return;
+
+            const isValid = this.validateForm();
+            if (!isValid) return;
+
+            if (!auth.currentUser || !this.medicalCenter) return;
             const that = this;
-            
-            const contactRef = db.collection('team_members').doc(that.trial.key_team_contact);
-            that.trial.contact = contactRef;
-            
-            const trialDoc = this.dataForm === 'new' ? 
+
+            if (that.trial.key_team_contact) {
+                const contactRef = db.collection('team_members').doc(that.trial.key_team_contact);
+                that.trial.contact = contactRef;
+            }
+
+            const trialDoc = this.dataForm === 'new' ?
                 db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc()
                 : db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc(that.trial.id);
 
             return trialDoc.set(that.trial)
-            .then(this.initMedicalCenterTrial)
-            .catch((error) => {
-                that.formStatus.error = error;
-                console.error("Error adding trial: ", error);
-            });
-        },
-
-
-        async deleteMedicalCenterTrial(){
-            this.deleteStatus.success = null;
-            this.deleteStatus.error = null;
-            this.deleteStatus.loading = true;
-
-            if (!auth.currentUser) return;
-            
-            const trialDoc = db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc(this.trial.id);
-            return trialDoc.delete()
                 .then(() => {
-                    this.deleteStatus.success = true;
-                    this.deleteStatus.loading = false;
-                    
-                    this.initMedicalCenterTrial(true);
+                    this.initMedicalCenterTrial();
                 })
                 .catch((error) => {
-                    this.deleteStatus.error = error;
-                    console.error("Error deleting trial: ", error);
-                    this.deleteStatus.loading = false;
+                    that.formStatus.error = error;
+                    console.error("Error adding trial: ", error);
                 });
         },
 
-        changeMedicalCenterTrial(trial){
-            // localStorage.setItem('medicalCenterTrial', JSON.stringify(trial));
-            // window.location.href = '/form-template' + ext;
+
+        async deleteMedicalCenterTrial() {
+            this.sendStatus.success = null;
+            this.sendStatus.error = null;
+            this.sendStatus.loading = true;
+
+            if (!auth.currentUser || !this.medicalCenter) return;
+
+            const trialDoc = db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc(this.trial.id);
+            return trialDoc.delete()
+                .then(() => {
+                    this.sendStatus.success = true;
+                    this.sendStatus.loading = false;
+
+                    this.initMedicalCenterTrial(true);
+                })
+                .catch((error) => {
+                    this.sendStatus.error = error;
+                    console.error("Error deleting trial: ", error);
+                    this.sendStatus.loading = false;
+                });
         },
 
-        async getMedicalCenterTeamMembers(){
-            if (!auth.currentUser) return;
-            
+        goToMedicalCenterTrial(trial) {
+            if(this.isAllowUser()){
+                localStorage.setItem('medicalCenterTrial', JSON.stringify(trial));
+                window.location.href = '/trial' + ext;   
+            }
+        },
+
+        async getMedicalCenterTeamMembers() {
+            if (!auth.currentUser || !this.medicalCenter) return;
+
             try {
                 const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').get();
-                consoleLog("Medical center team members:", doc.docs);
                 if (doc.docs.length > 0) {
                     this.medicalCenter.team_members = doc.docs.map(doc => {
-                        return { id: doc.id, ...doc.data()};
+                        return { id: doc.id, ...doc.data() };
                     });
-                    consoleLog("Medical center data:", this.medicalCenter);
                 } else {
                     consoleLog("No such document!");
                 }
@@ -321,17 +468,14 @@ const app = Vue.createApp({
             }
         },
 
-        async getMedicalCenterTeamMemberById(data){
-            if (!auth.currentUser) return;
-            
+        async getMedicalCenterTeamMemberById(data) {
+            if (!auth.currentUser || !this.medicalCenter) return;
+
             try {
                 const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').doc(data.id).get();
-                
+
                 if (doc.exists) {
-                    this.teamMember = {id: doc.id, ...doc.data()};
-
-
-                    consoleLog("Medical center team member data:", this.teamMember);
+                    this.teamMember = { id: doc.id, ...doc.data() };
                 } else {
                     consoleLog("No such document!");
                 }
@@ -340,35 +484,35 @@ const app = Vue.createApp({
             }
         },
 
-        async initMedicalCenterTeamMember(isDelete = false){
-            if(!isDelete)
+        async initMedicalCenterTeamMember(isDelete = false) {
+            if (!isDelete)
                 this.formStatus.success = true;
             setTimeout(() => {
-                if(!isDelete){
-                    this.formStatus.success = false;
-                }else{
-                    this.confirmDeletePopUp = false;
+                if (!isDelete) {
+                    // this.formStatus.success = false;
+                } else {
+                    this.confirmPopUp = false;
                 }
 
                 this.dataForm = 'new';
-                this.teamMember = {
-                    fullname: 'Lorem Ipsum',
-                    email: 'ylayalysalas@gmail.com',
-                    role: 'Lorem Ipsum',
-                    phone: '+12345678909',
-                };
+                
                 localStorage.removeItem('medicalCenterTeamMember');
-                window.location.href = '/dashboard' + ext;
-            }, 1000);
+                this.goToDashboard('team');
+            }, 600);
         },
 
-        async setMedicalCenterTeamMember(){
+        async setMedicalCenterTeamMember() {
             this.formStatus.success = null;
             this.formStatus.error = null;
-            if (!auth.currentUser) return;
+
+            const isValid = this.validateForm();
+            if (!isValid) return;
+
+
+            if (!auth.currentUser || !this.medicalCenter) return;
             const teamMember = this.teamMember;
-            
-            const teamMemberDoc = this.dataForm === 'new' ? 
+
+            const teamMemberDoc = this.dataForm === 'new' ?
                 db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').doc()
                 : db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').doc(teamMember.id);
 
@@ -380,247 +524,460 @@ const app = Vue.createApp({
                 });
         },
 
-        deleteMedicalCenterTeamMember(){
-            this.deleteStatus.success = null;
-            this.deleteStatus.error = null;
-            this.deleteStatus.loading = true;
+        deleteMedicalCenterTeamMember() {
+            this.sendStatus.success = null;
+            this.sendStatus.error = null;
+            this.sendStatus.loading = true;
 
             if (!auth.currentUser) return;
-            
+
             const teamMemberDoc = db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').doc(this.teamMember.id);
-                teamMemberDoc.delete()
+            teamMemberDoc.delete()
                 .then(() => {
-                    this.deleteStatus.success = true;
-                    this.deleteStatus.loading = false;
-                    
+                    this.sendStatus.success = true;
+                    this.sendStatus.loading = false;
+
                     this.initMedicalCenterTeamMember(true);
                 })
                 .catch((error) => {
-                    this.deleteStatus.error = error;
+                    this.sendStatus.error = error;
                     console.error("Error deleting team member: ", error);
-                    this.deleteStatus.loading = false;
+                    this.sendStatus.loading = false;
                 });
         },
 
-        changeMedicalCenterTeamMember(teamMember){
-            // localStorage.setItem('medicalCenterTeamMember', JSON.stringify(teamMember));
-            // window.location.href = '/form-team-template' + ext;
+        goToMedicalCenterTeamMember(teamMember) {
+            if(!this.isAllowUser()) return;
+            localStorage.setItem('medicalCenterTeamMember', JSON.stringify(teamMember));
+            window.location.href = '/team-member' + ext;
         },
 
-        async getTeamMember(data){
+
+        async getTeamMember(data) {
             if (!auth.currentUser || !data || !this.medicalCenter.id) return "";
-            consoleLog(data.id)
 
-            if(this.medicalCenter.team_members && this.medicalCenter.team_members.length > 0){
-                return this.medicalCenter.team_members.find(teamMember => teamMember.id == data.id);
+            if (this.medicalCenter.team_members && this.medicalCenter.team_members.length > 0) {
+                const tM = this.medicalCenter.team_members.find(teamMember => teamMember.id == data.id);
+                return tM || {};
             }
-            
+
             const teamMember = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').doc(data.id).get();
-            consoleLog(teamMember.data());
-            return teamMember.data();
+
+            if (teamMember.exists) {
+                return teamMember.data();
+            }
+            return {};
         },
 
-        confirmDeleteMedicalCenterItem(){
+        confirmCloseDropdown() {
             const el = document.querySelector('.daf-dropdown-1');
             $(el).triggerHandler('w-close.w-dropdown');
 
-            this.confirmDeletePopUp = true;
+            this.confirmPopUp = true;
         },
 
-        insertTeamMembers(){
-            const temas = [
-                {
-                    "name": "Dr. Eleanor Vance",
-                    "email": "eleanor.vance@yale.edu",
-                    "phone": "(203) 555-0301",
-                    "role": "Director of Medical Oncology"
-                },
-                {
-                    "name": "Dr. Samuel Greene",
-                    "email": "samuel.greene@yale.edu",
-                    "phone": "(203) 555-0302",
-                    "role": "Chief of Surgical Oncology"
-                },
-                {
-                    "name": "Isabelle Moreau",
-                    "email": "isabelle.moreau@yale.edu",
-                    "phone": "(203) 555-0303",
-                    "role": "Oncology Clinical Nurse Specialist"
-                },
-                {
-                    "name": "Dr. Charles Wright",
-                    "email": "charles.wright@yale.edu",
-                    "phone": "(203) 555-0304",
-                    "role": "Head of Radiation Oncology"
-                },
-                {
-                    "name": "Dr. Aisha Khan",
-                    "email": "aisha.khan@yale.edu",
-                    "phone": "(203) 555-0305",
-                    "role": "Hematologic Malignancies Specialist"
-                },
-                {
-                    "name": "Marcus Choi",
-                    "email": "marcus.choi@yale.edu",
-                    "phone": "(203) 555-0306",
-                    "role": "Cancer Genomics Researcher"
-                },
-                {
-                    "name": "Dr. Olivia Bennett",
-                    "email": "olivia.bennett@yale.edu",
-                    "phone": "(203) 555-0307",
-                    "role": "Pediatric Oncologist"
-                },
-                {
-                    "name": "Liam O'Connell",
-                    "email": "liam.oconnell@yale.edu",
-                    "phone": "(203) 555-0308",
-                    "role": "Patient Support Services Coordinator"
-                },
-                {
-                    "name": "Dr. Hannah Jorgenson",
-                    "email": "hannah.jorgenson@yale.edu",
-                    "phone": "(203) 555-0309",
-                    "role": "Thoracic Oncology Lead"
-                },
-                {
-                    "name": "David Rodriguez",
-                    "email": "david.rodriguez@yale.edu",
-                    "phone": "(203) 555-0310",
-                    "role": "Clinical Trials Office Manager"
-                },
-                {
-                    "name": "Dr. Kenji Tanaka",
-                    "email": "kenji.tanaka@yale.edu",
-                    "phone": "(203) 555-0311",
-                    "role": "GI Oncology Specialist"
-                },
-                {
-                    "name": "Fatima Al-Jamil",
-                    "email": "fatima.aljamil@yale.edu",
-                    "phone": "(203) 555-0312",
-                    "role": "Oncology Pharmacist"
-                },
-                {
-                    "name": "Dr. Nora Fitzgerald",
-                    "email": "nora.fitzgerald@yale.edu",
-                    "phone": "(203) 555-0313",
-                    "role": "Director of Cancer Research"
-                },
-                {
-                    "name": "Benjamin Carter",
-                    "email": "benjamin.carter@yale.edu",
-                    "phone": "(203) 555-0314",
-                    "role": "Data Analyst for Clinical Studies"
-                },
-                {
-                    "name": "Dr. Sofia Ivanova",
-                    "email": "sofia.ivanova@yale.edu",
-                    "phone": "(203) 555-0315",
-                    "role": "Breast Cancer Program Director"
-                },
-                {
-                    "name": "Ethan Schmidt",
-                    "email": "ethan.schmidt@yale.edu",
-                    "phone": "(203) 555-0316",
-                    "role": "Community Outreach Coordinator"
+
+        async getAllUsers() {
+            if (!auth.currentUser || (auth.currentUser && !this.isAdmin)) return;
+
+            try {
+                const querySnapshot = await db.collection('users').get();
+                this.users = querySnapshot.docs.map(doc => {
+                    return { id: doc.id, ...doc.data() };
+                });
+
+            } catch (error) {
+                console.error("Error getting users data:", error);
+            }
+        },
+
+        async getUserData() {
+            if (!auth.currentUser) return;
+            let userData = null;
+
+            try {
+                const doc = await db.collection('users').doc(this.user.uid).get();
+
+                if (doc.exists) {
+                    userData = { id: doc.id, ...doc.data() };
+                } else {
+                    consoleLog("No such document!");
                 }
-            ];
+            } catch (error) {
+                console.error("Error getting user data:", error);
+            }
+            return userData;
+        },
 
-            temas.forEach(async (teamMember) => {
-                const teamMemberDoc = db.collection('medical_centers').doc("G4ebUF50yCTzMD92kHc3").collection('team_members').doc();
+        getMedicalCentersByUser(user) {
+            if (!auth.currentUser || !user) return "";
 
-                teamMemberDoc.set(teamMember)
-                .then(() => {
-                    console.log("Team member added successfully");
+            if (user.role == 'ADMIN') return 'Admin';
+
+            if (this.medicalCenters && this.medicalCenters.length > 0) {
+                const mCs = this.medicalCenters.filter(center => center.users && center.users.includes(user.id));
+                return mCs.map(c => c.name).join(', ');
+            }
+
+            return "";
+        },
+
+        initUser() {
+            localStorage.removeItem('formUser');
+            this.confirmPassword = "";
+
+            setTimeout(() => {
+                this.confirmPopUp = false;
+
+                this.goToDashboard('users');
+            }, 1000);
+        },
+
+        async getFormUser() {
+            if (this.formUser && this.formUser.id) {
+                try {
+                    const doc = await db.collection('users').doc(this.formUser.id).get();
+
+                    if (doc.exists) {
+                        const medicalCenters = this.medicalCenters.filter(center => center.users && center.users.includes(doc.id));
+                        const currentCenters = [...medicalCenters ];
+
+                        this.formUser = { id: doc.id, ...doc.data() };
+                        this.formUser.isAdmin = this.formUser.role == 'ADMIN';
+                        this.formUser.medicalCenters = medicalCenters.map(c => c.id);
+                        this.formUser.currentCenters = currentCenters.map(c => c.id);
+                    } else {
+                        consoleLog("No such document!");
+                    }
+                } catch (error) {
+                    console.error("Error getting user data:", error);
+                }
+            }
+        },
+
+        async setUser() {
+            const isValid = this.validateForm();
+            if (!isValid || (!this.confirmPassword && this.dataForm === 'new')) return;
+
+            this.formStatus.success = null;
+            this.formStatus.error = null;
+            this.sendStatus.success = null;
+            this.sendStatus.error = null;
+
+            if (!auth.currentUser) return;
+            const user = this.formUser;
+            this.sendStatus.loading = true;
+            this.formStatus.loading = true;
+
+            if (this.dataForm === 'new') {
+                if( this.formUser.password !== this.formUser.confirmPassword) {
+                    this.formStatus.error = true;
+                    this.formStatus.loading = false;
+                    return;
+                }
+
+                try {
+                    const currentUserEmail = auth.currentUser.email + "";
+                    await auth.signInWithEmailAndPassword(
+                        currentUserEmail,
+                        this.confirmPassword
+                    );
+
+                    user.userCredential = await firebase.auth().createUserWithEmailAndPassword(user.email, user.password)
+                    this.formUser.id = user.userCredential.user.uid;
+
+                    await auth.signInWithEmailAndPassword(
+                        currentUserEmail,
+                        this.confirmPassword
+                    );
+
+                    this.confirmPassword = "";
+                    this.sendStatus.success = true;
+                    this.sendStatus.loading = false;
+
+                    setTimeout(() => {
+                        this.confirmPopUp = false;
+                        this.sendStatus.success = false;
+                        this.sendStatus.error = false;
+                    }, 1000);
+
+                } catch (error) {
+                    console.error("Error adding user: ", error.message);
+                    this.sendStatus.loading = false;
+                    this.sendStatus.error = true;
+                    return;
+                }
+            }
+
+            const userDoc = db.collection('users').doc(this.formUser.id);
+
+            const _user = {
+                name: this.formUser.name,
+                role: this.formUser.isAdmin ? 'ADMIN' : 'VIEWER',
+            }
+
+
+
+            try {
+                if (this.dataForm === 'new') {
+                    _user.email = this.formUser.email;
+                    await userDoc.set(_user);
+                } else {
+                    await userDoc.update(_user);
+                }
+                
+
+                for (let i = 0; i < this.formUser.medicalCenters.length; i++) {
+                    await this.updateMedicalCenterUsers(this.formUser.medicalCenters[i], this.formUser.id, 'add');
+                }
+
+                const removeCenters = this.formUser.currentCenters.filter(centerId => !this.formUser.medicalCenters.includes(centerId));
+                for (let i = 0; i < removeCenters.length; i++) {
+                    await this.updateMedicalCenterUsers(removeCenters[i], this.formUser.id, 'remove');
+                }
+                this.formStatus.success = true;
+                this.initUser();
+
+            } catch (error) {
+                this.formStatus.error = true;
+                console.error("Error adding user: ", error.message);
+                this.formStatus.loading = false;
+            }
+
+        },
+
+        goToUser(user) {
+            localStorage.setItem('formUser', JSON.stringify(user));
+            window.location.href = '/user' + ext;
+        },
+
+        async updateMedicalCenterUsers(centerId, userId, type) {
+            if (!auth.currentUser) return;
+
+            const centerDoc = await db.collection('medical_centers').doc(centerId).get();
+            if (!centerDoc.exists) return;
+            const users = centerDoc.data().users || [];
+            if (!users.includes(userId) && type === 'add') {
+                users.push(userId);
+            } else if (users.includes(userId) && type === 'remove') {
+                users.splice(users.indexOf(userId), 1);
+            }
+
+            try {
+                await db.collection('medical_centers').doc(centerId).update({
+                    users: users
                 })
-                .catch((error) => {
-                    console.error("Error adding team member: ", error);
-                });
-            });
+            } catch (error) {
+                console.error("Error updating center: ", error);
+                return false;
+            }
+            
+            return true;
         },
-        
-        async actualiceTrials(){
-            const medicalCenters = await db.collection('medical_centers').get();
-            medicalCenters.forEach(async (medicalCenter) => {
-                const trials = await db.collection('medical_centers').doc(medicalCenter.id).collection('trials').get();
-                trials.forEach(async (trial) => {
-                    const contactRef = db.collection('team_members').doc(trial.data().contact);
-                    console.log(trial.data().contact);
-                    db.collection('medical_centers').doc(medicalCenter.id).collection('trials').doc(trial.id).set({
-                        contact: contactRef
-                    })
-                    .then(() => {
-                        console.log("Trial updated successfully");
-                    })
-                    .catch((error) => {
-                        console.error("Error updating trial: ", error);
-                    });
-                });
-            });
+
+
+        getSelectedMedicalCenters(mCs) {
+            if (!mCs || mCs.length === 0) return 'Select one...';
+            const centers = this.medicalCenters.filter(center => mCs.includes(center.id));
+            return centers.map(center => center.name).join(', ');
         },
-        
+
+        changeMedicalCenterToUser(mCId) {
+            if (!this.formUser.medicalCenters) {
+                this.formUser.medicalCenters = [];
+            }
+            if (this.formUser.medicalCenters.includes(mCId)) {
+                this.formUser.medicalCenters = this.formUser.medicalCenters.filter(id => id !== mCId);
+            } else {
+                this.formUser.medicalCenters.push(mCId);
+            }
+        },
+
+        confirmCreateUser() {
+            if(this.dataForm === 'new' && this.formUser.password !== this.formUser.confirmPassword) {
+                this.formStatus.error = true;
+                return;
+            }
+
+            if(this.dataForm === 'edit') {
+                this.setUser();
+                return;
+            }
+
+            const isValid = this.validateForm();
+            if (!isValid) return;
+            
+            this.confirmPopUp = true;
+        },
+
+        async verifyAdmin() {
+            if (!auth.currentUser) return;
+
+            const userData = await this.getUserData();
+            this.isAdmin = userData && userData.role == 'ADMIN';
+
+        },
+
+        validateForm() {
+            this.formStatus.valid = null;
+            
+            const form = document.querySelector('[data-form-validate]');
+            const isValid = form.checkValidity();
+            form.classList.add('was-validated');
+            this.formStatus.valid = isValid;
+
+            return isValid;
+        },
+
+        goToDashboard(mode = 'team') {
+            // localStorage.removeItem('medicalCenter');
+            localStorage.removeItem('medicalCenterTrial');
+            localStorage.removeItem('medicalCenterTeamMember');
+            localStorage.removeItem('formUser');
+            localStorage.removeItem('center');
+
+            localStorage.setItem('mode', mode);
+
+            this.dataMode = mode;
+            if(!window.location.pathname.includes('dashboard')){
+                 window.location.href = '/dashboard' + ext;
+            }else{
+                // this.loading = true;
+                if(mode == 'centers' || mode == 'users'){
+                    this.medicalCenter = {};
+                }
+                if((mode == 'trials' || mode == 'team') && !this.medicalCenter.id){
+                   this.getMedicalCenters();
+                }
+            }
+        },
+
+        closeNav() {
+            const el = document.querySelector('.moj-dropdown-1');
+            $(el).triggerHandler('w-close.w-dropdown');
+        },
+    
+        isAllowUser() {
+            return this.isAdmin || (this.medicalCenter && this.medicalCenter.users && this.medicalCenter.users.includes(auth.currentUser.uid));
+        },
+
+
         checkUser() {
             auth.onAuthStateChanged(async (user) => {
                 this.user = user;
-                consoleLog(this.pathname, this.user);
+
                 if (user) {
-                    if(this.pathname == '' || this.pathname == 'index.html'){
-                        this.dataMode = 'form';
-                        window.location.href = '/dashboard' + ext;
+                    if (this.pathname == '' || this.pathname == 'index.html') {
+                        this.goToDashboard('team');
                     }
-                    if(this.pathname == 'dashboard' + ext){
-                        this.getUserData();
-                        this.getMedicalCenters();
-                        this.dataMode = 'team';
+                    await this.verifyAdmin();
+                    if (this.pathname == 'dashboard' + ext) {
                         this.loading = true;
 
-                        const urlQuery = window.location.search;
-                        const urlParams = new URLSearchParams(urlQuery);
-                        const mode = urlParams.get('mode');
-
-                        if(mode){
-                            window.history.replaceState(null, null, '/dashboard');
+                        if (this.isAdmin) {
+                            this.getAllUsers();
                         }
                         
-                        if(mode == 'trial'){
-                            this.dataMode = 'trials';
+                        if((this.dataMode == 'centers' || this.dataMode == 'users') && !this.isAdmin){
+                            localStorage.setItem('mode', 'team');
+                            this.dataMode = 'team';
                         }
+                        this.getMedicalCenters(this.dataMode != 'centers' && this.dataMode != 'users');
+
                     }
-                    if(this.pathname == 'form-template' + ext){
-                        this.getUserData();
+                    if (this.pathname == 'trial' + ext) {
                         this.getMedicalCenters();
                         this.dataMode = 'trials';
                         const trial = localStorage.getItem('medicalCenterTrial');
                         this.dataForm = 'new';
-                        if(trial){
+                        if (trial) {
                             this.trial = JSON.parse(trial);
                             this.getMedicalCenterTrialById(this.trial.id);
                             this.dataForm = 'edit';
                         }
                     }
-                    if(this.pathname == 'form-team-template' + ext){
-                        this.getUserData();
+                    if (this.pathname == 'team-member' + ext) {
                         this.getMedicalCenters();
                         this.dataMode = 'team';
                         const teamMember = localStorage.getItem('medicalCenterTeamMember');
                         this.dataForm = 'new';
-                        if(teamMember){
+                        if (teamMember) {
                             this.teamMember = JSON.parse(teamMember);
                             this.getMedicalCenterTeamMemberById(this.teamMember.id);
                             this.dataForm = 'edit';
                         }
                     }
-                }else{
-                    if(this.pathname != '' && this.pathname != 'index.html'){
+                    if (this.pathname == 'med-center' + ext) {
+                        if (!this.isAdmin) {
+                            window.location.href = '/dashboard' + ext;
+                        }
+                        this.dataForm = 'new';
+                        const center = localStorage.getItem('center');
+                        if (center) {
+                            this.center = JSON.parse(center);
+                            this.dataForm = 'edit';
+                        }
+
+                        this.getMedicalCenters(false);
+                        this.getAllUsers();
+                        this.dataMode = 'centers';
+                    }
+
+                    if (this.pathname == 'user' + ext) {
+                        if (this.confirmPassword) {
+                            return;
+                        }
+
+                        if (!this.isAdmin) {
+                            window.location.href = '/dashboard' + ext;
+                        }
+                        
+                        this.getMedicalCenters(false);
+                        this.dataMode = 'users';
+                        const formUser = localStorage.getItem('formUser');
+                        this.dataForm = 'new';
+
+                        if (formUser) {
+                            this.formUser = JSON.parse(formUser);
+                            this.formUser.isAdmin = this.formUser.role == 'ADMIN';
+                            this.dataForm = 'edit';
+                            this.getFormUser();
+                        }
+                        this.formStatus.init = false;
+                        
+                        
+                    }
+
+
+                    this.init = true;
+                } else {
+                    if (this.pathname != '' && this.pathname != 'index.html') {
                         window.location.href = '/';
                     }
                 }
+
             });
+
+            const inputs = document.querySelectorAll('input');
+            const selects = document.querySelectorAll('select');
+            
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    this.formStatus.valid = null;
+                })
+            })
+            selects.forEach(select => {
+                select.addEventListener('change', () => {
+                    this.formStatus.valid = null;
+                })
+            })
         },
     },
     mounted() {
-        consoleLog('Init App');
+        const mode = localStorage.getItem('mode');
+        if (mode) {
+            this.dataMode = mode;
+        }
         this.checkUser();
         const container = document.getElementById('app');
         container.classList.remove('nyc-app');
