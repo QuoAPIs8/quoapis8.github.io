@@ -21,6 +21,12 @@ const consoleLog = (data, data1) => {
     }
 }
 
+const consoleError = (data, data1) => {
+    if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
+        console.error(data, data1);
+    }
+}
+
 // Aplicación Vue
 const app = Vue.createApp({
     data() {
@@ -74,12 +80,14 @@ const app = Vue.createApp({
                 error: null,
                 success: false,
                 loading: false,
-                init: true
+                init: true,
+                errorPassword: false
             },
             sendStatus: {
                 error: null,
                 success: false,
-                loading: false
+                loading: false,
+                errorPassword: false
             },
             loading: true,
             dataMode: 'team',
@@ -113,7 +121,7 @@ const app = Vue.createApp({
                 this.loginForm.success = true;
 
             } catch (error) {
-                console.error(error.code, error.message);
+                consoleError(error.code, error.message);
                 this.loginForm.error = error.message;
             } finally {
                 this.loginForm.loading = false;
@@ -127,7 +135,7 @@ const app = Vue.createApp({
                 this.user = null;
                 localStorage.clear();
             } catch (error) {
-                console.error(error.code, error.message);
+                consoleError(error.code, error.message);
             } finally {
                 window.location.href = '/';
             }
@@ -170,7 +178,7 @@ const app = Vue.createApp({
                 }
                 this.loading = false;
             } catch (error) {
-                console.error("Error getting medical centers:", error);
+                consoleError("Error getting medical centers:", error);
             }
         },
 
@@ -206,7 +214,7 @@ const app = Vue.createApp({
                     this.loading = false;
                 }
             } catch (error) {
-                console.error("Error getting medical center data:", error);
+                consoleError("Error getting medical center data:", error);
             }
         },
 
@@ -248,7 +256,7 @@ const app = Vue.createApp({
                 })
                 .catch((error) => {
                     this.formStatus.error = error;
-                    console.error("Error adding center: ", error);
+                    consoleError("Error adding center: ", error);
                     this.enabledBtn(ev, 'Save');
                 });
         },
@@ -273,7 +281,7 @@ const app = Vue.createApp({
                 })
                 .catch((error) => {
                     this.sendStatus.error = error;
-                    console.error("Error deleting center: ", error);
+                    consoleError("Error deleting center: ", error);
                     this.sendStatus.loading = false;
                     this.enabledBtn(ev, 'Delete');
                 });
@@ -321,7 +329,7 @@ const app = Vue.createApp({
                     return { id: doc.id, ...doc.data() };
                 });
             } catch (error) {
-                console.error("Error getting team members data:", error);
+                consoleError("Error getting team members data:", error);
             }
 
             try {
@@ -338,7 +346,7 @@ const app = Vue.createApp({
                     return { id: doc.id, ...doc.data(), contact, medicalCenter };
                 });
             } catch (error) {
-                console.error("Error getting trials data:", error);
+                consoleError("Error getting trials data:", error);
             }
 
 
@@ -361,7 +369,7 @@ const app = Vue.createApp({
                     consoleLog("No such document!");
                 }
             } catch (error) {
-                console.error("Error getting medical center data:", error);
+                consoleError("Error getting medical center data:", error);
             }
         },
 
@@ -377,7 +385,7 @@ const app = Vue.createApp({
                     consoleLog("No such document!");
                 }
             } catch (error) {
-                console.error("Error getting medical center trial data:", error);
+                consoleError("Error getting medical center trial data:", error);
             }
         },
 
@@ -423,7 +431,7 @@ const app = Vue.createApp({
                 })
                 .catch((error) => {
                     that.formStatus.error = error;
-                    console.error("Error adding trial: ", error);
+                    consoleError("Error adding trial: ", error);
                     that.enabledBtn(ev, 'Save');
                 });
         },
@@ -448,7 +456,7 @@ const app = Vue.createApp({
                 })
                 .catch((error) => {
                     this.sendStatus.error = error;
-                    console.error("Error deleting trial: ", error);
+                    consoleError("Error deleting trial: ", error);
                     this.sendStatus.loading = false;
                     this.enabledBtn(ev, 'Delete');
                 });
@@ -484,7 +492,7 @@ const app = Vue.createApp({
                     consoleLog("No such document!");
                 }
             } catch (error) {
-                console.error("Error getting medical center data:", error);
+                consoleError("Error getting medical center data:", error);
             }
         },
 
@@ -500,7 +508,7 @@ const app = Vue.createApp({
                     consoleLog("No such document!");
                 }
             } catch (error) {
-                console.error("Error getting medical center team member data:", error);
+                consoleError("Error getting medical center team member data:", error);
             }
         },
 
@@ -544,7 +552,7 @@ const app = Vue.createApp({
                 })
                 .catch((error) => {
                     this.formStatus.error = error;
-                    console.error("Error adding team member: ", error);
+                    consoleError("Error adding team member: ", error);
                     this.enabledBtn(ev, 'Save');
                 });
         },
@@ -569,7 +577,7 @@ const app = Vue.createApp({
                 })
                 .catch((error) => {
                     this.sendStatus.error = error;
-                    console.error("Error deleting team member: ", error);
+                    consoleError("Error deleting team member: ", error);
                     this.sendStatus.loading = false;
                     this.enabledBtn(ev, 'Delete');
                 });
@@ -616,7 +624,7 @@ const app = Vue.createApp({
                 });
 
             } catch (error) {
-                console.error("Error getting users data:", error);
+                consoleError("Error getting users data:", error);
             }
         },
 
@@ -633,7 +641,7 @@ const app = Vue.createApp({
                     consoleLog("No such document!");
                 }
             } catch (error) {
-                console.error("Error getting user data:", error);
+                consoleError("Error getting user data:", error);
             }
             return userData;
         },
@@ -679,7 +687,7 @@ const app = Vue.createApp({
                         consoleLog("No such document!");
                     }
                 } catch (error) {
-                    console.error("Error getting user data:", error);
+                    consoleError("Error getting user data:", error);
                 }
             }
         },
@@ -690,6 +698,7 @@ const app = Vue.createApp({
 
             this.formStatus.success = null;
             this.formStatus.error = null;
+            this.formStatus.errorPassword = false;
             this.sendStatus.success = null;
             this.sendStatus.error = null;
 
@@ -726,9 +735,13 @@ const app = Vue.createApp({
                     );
 
                 } catch (error) {
-                    console.error("Error adding user: ", error.message);
+                    consoleError("Error adding user: ", error.message);
                     this.sendStatus.loading = false;
-                    this.sendStatus.error = true;
+                    if(error.code === 'auth/invalid-credential') {
+                        this.sendStatus.errorPassword = true;
+                    }else{
+                        this.sendStatus.error = true;
+                    }
                     this.enabledBtn(ev, 'Create');
                     return;
                 }
@@ -780,7 +793,7 @@ const app = Vue.createApp({
 
             } catch (error) {
                 this.formStatus.error = true;
-                console.error("Error adding user: ", error.message);
+                consoleError("Error adding user: ", error.message);
                 this.formStatus.loading = false;
                 this.enabledBtn(ev, 'Save');
             }
@@ -809,7 +822,7 @@ const app = Vue.createApp({
                     users: users
                 })
             } catch (error) {
-                console.error("Error updating center: ", error);
+                consoleError("Error updating center: ", error);
                 return false;
             }
             
@@ -835,8 +848,9 @@ const app = Vue.createApp({
         },
 
         confirmCreateUser(ev) {
+            this.formStatus.errorPassword = false;
             if(this.dataForm === 'new' && this.formUser.password !== this.formUser.confirmPassword) {
-                this.formStatus.error = true;
+                this.formStatus.errorPassword = true;
                 return;
             }
 
@@ -1026,6 +1040,8 @@ const app = Vue.createApp({
             inputs.forEach(input => {
                 input.addEventListener('input', () => {
                     this.formStatus.valid = null;
+                    this.formStatus.errorPassword = false;
+                    this.sendStatus.errorPassword = false;
                 })
             })
             selects.forEach(select => {
