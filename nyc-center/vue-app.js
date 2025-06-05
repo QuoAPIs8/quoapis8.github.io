@@ -15,13 +15,13 @@ const auth = fApp.auth();
 
 const ext = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? ".html" : "";
 
-const consoleLog = (data, data1) => {
+const consoleLog = (data, data1 = "") => {
     if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
         console.log(data, data1);
     }
 }
 
-const consoleError = (data, data1) => {
+const consoleError = (data, data1 = "") => {
     if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
         console.error(data, data1);
     }
