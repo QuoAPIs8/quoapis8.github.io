@@ -148,6 +148,7 @@ const app = Vue.createApp({
             try {
                 const querySnapshot = await db.collection('medical_centers')
                     // .where("users", "array-contains", auth.currentUser.uid)
+                    .orderBy("name")
                     .get();
 
                 const medicalCenter = localStorage.getItem('medicalCenter');
@@ -324,7 +325,9 @@ const app = Vue.createApp({
 
             let teamMembers = [];
             try {
-                teamMembers = await db.collectionGroup('team_members').get();
+                teamMembers = await db.collectionGroup('team_members')
+                    .orderBy("name")
+                    .get();
                 teamMembers = teamMembers.docs.map(doc => {
                     return { id: doc.id, ...doc.data() };
                 });
@@ -333,7 +336,9 @@ const app = Vue.createApp({
             }
 
             try {
-                const trials = await db.collectionGroup('trials').get();
+                const trials = await db.collectionGroup('trials')
+                    .orderBy("name")
+                    .get();
                 this.allTrials = trials.docs.map(doc => {
                     let contact = {};
                     let medicalCenter = "";
@@ -356,7 +361,9 @@ const app = Vue.createApp({
             if (!auth.currentUser || !this.medicalCenter) return;
 
             try {
-                const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').get();
+                const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials')
+                    .orderBy("name")
+                    .get();
                 if (doc.docs.length > 0) {
                     this.medicalCenter.trials = await Promise.all(doc.docs.map(async doc => {
                         let contact = {};
@@ -377,7 +384,8 @@ const app = Vue.createApp({
             if (!auth.currentUser || !this.medicalCenter) return;
 
             try {
-                const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials').doc(id).get();
+                const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('trials')
+                    .doc(id).get();
 
                 if (doc.exists) {
                     this.trial = { id: doc.id, ...doc.data(), key_team_contact: doc.data().contact?.id };
@@ -488,7 +496,9 @@ const app = Vue.createApp({
             if (!auth.currentUser || !this.medicalCenter) return;
 
             try {
-                const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members').get();
+                const doc = await db.collection('medical_centers').doc(this.medicalCenter.id).collection('team_members')
+                    .orderBy("name")
+                    .get();
                 if (doc.docs.length > 0) {
                     this.medicalCenter.team_members = doc.docs.map(doc => {
                         return { id: doc.id, ...doc.data() };
