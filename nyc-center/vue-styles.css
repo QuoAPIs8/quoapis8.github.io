@@ -206,7 +206,17 @@ select,
     opacity: .5;
 }
 
+.disabled-actions{
+    cursor: not-allowed;
+    position: relative;    
+}
 
+.disabled-actions::after{
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+}
 
 @media screen and (max-width: 991px) {
     .lgn-wrap-1 {
