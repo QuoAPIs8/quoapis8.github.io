@@ -865,14 +865,13 @@ const app = Vue.createApp({
             localStorage.removeItem('center');
             localStorage.setItem('mode', mode);
 
-            if(mode == 'init'){
-                localStorage.removeItem('mode');
-                localStorage.removeItem('medicalCenter');
-            }
-
             this.dataMode = mode;
             if(!window.location.pathname.includes('dashboard')){
-                 window.location.href = '/dashboard' + ext;
+                if(mode == 'init'){
+                    localStorage.removeItem('mode');
+                    localStorage.removeItem('medicalCenter');
+                }
+                window.location.href = '/dashboard' + ext;
             }else{
                 // this.loading = true;
                 if(mode == 'centers' || mode == 'users'){
@@ -880,6 +879,13 @@ const app = Vue.createApp({
                 }
                 if((mode == 'trials' || mode == 'team') && !this.medicalCenter.id){
                    this.getMedicalCenters();
+                }
+                if(mode == 'init'){
+                    localStorage.removeItem('mode');
+                    localStorage.removeItem('medicalCenter');
+                    this.dataMode = 'team';
+                    this.medicalCenter = {};
+                    this.getMedicalCenters();
                 }
             }
         },
