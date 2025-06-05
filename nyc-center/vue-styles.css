@@ -220,7 +220,7 @@ select,
     z-index: 2;
 }
 
-.moj-toggle-1 > .moj-text-1{
+.moj-toggle-1 > .moj-text-1-wrap{
     position: relative;
     display: block;
     display: flex;
@@ -237,6 +237,8 @@ select,
         background-image: url(https://cdn.prod.website-files.com/6810f8b3b925ddd8e243dab1/681508e2b1e3f654c611ecaa_Frame%204.svg);
         background-size: contain;
         background-repeat: no-repeat;
+        flex-basis: .7em;
+        flex-shrink: 0;
     }
 }
 
@@ -259,5 +261,9 @@ select,
         & .moj-wrap-5{
             text-align: right;
         }
+    }
+
+    .moj-toggle-1{
+        display: block;
     }
 }
