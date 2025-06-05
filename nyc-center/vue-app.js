@@ -34,36 +34,37 @@ const app = Vue.createApp({
             medicalCenter: {},
             allTrials: [],
             center: {
-                name: 'Lorem Ipsum',
-                research_unit_name: 'Lorem Ipsum',
+                name: '',
+                research_unit_name: '',
             },
             formUser: {
-                name: 'Lorem Ipsum',
-                role: 'VIEW',
-                email: 'user@nyccancercenter.com',
-                password: '123456',
-                confirmPassword: '123456',
+                name: '',
+                role: '',
+                email: '',
+                password: '',
+                confirmPassword: '',
                 currentCenters: [],
                 medicalCenters: [],
             },
             trial: {
-                name: 'Lorem Ipsum',
-                sponsors: 'Tiae Dor Asim',
-                nct: 'NCT00000000',
-                brief_moa: 'Lorem Ipsum',
-                mutation_or_key_biomarker: 'Lorem Ipsum',
-                pi_name: 'Dor Asimet',
-                key_team_contact: 'ivXQazySkKSn41TuMCNn_team2'
+                name: '',
+                sponsors: '',
+                nct: '',
+                nct_link: '',
+                brief_moa: '',
+                mutation_or_key_biomarker: '',
+                pi_name: '',
+                key_team_contact: ''
             },
             teamMember: {
-                name: 'Lorem Ipsum',
-                email: 'user@nyccancercenter.com',
-                role: 'Lorem Ipsum',
-                phone: '+12345678909',
+                name: '',
+                email: '',
+                role: '',
+                phone: '',
             },
             loginForm: {
-                email: 'ylayalysalas@gmail.com',
-                password: '123456',
+                email: '',
+                password: '',
                 error: null,
                 success: false,
                 loading: false,
@@ -124,14 +125,7 @@ const app = Vue.createApp({
             try {
                 await auth.signOut();
                 this.user = null;
-                localStorage.removeItem('medicalCenter');
-                localStorage.removeItem('medicalCenterTrial');
-                localStorage.removeItem('medicalCenterTeamMember');
-                localStorage.removeItem('formUser');
-                localStorage.removeItem('trial');
-                localStorage.removeItem('teamMember');
-                localStorage.removeItem('center');
-                localStorage.removeItem('mode');
+                localStorage.clear();
             } catch (error) {
                 console.error(error.code, error.message);
             } finally {
