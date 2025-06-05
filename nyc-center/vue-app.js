@@ -858,13 +858,17 @@ const app = Vue.createApp({
         },
 
         goToDashboard(mode = 'team') {
-            // localStorage.removeItem('medicalCenter');
+
             localStorage.removeItem('medicalCenterTrial');
             localStorage.removeItem('medicalCenterTeamMember');
             localStorage.removeItem('formUser');
             localStorage.removeItem('center');
-
             localStorage.setItem('mode', mode);
+
+            if(mode == 'init'){
+                localStorage.removeItem('mode');
+                localStorage.removeItem('medicalCenter');
+            }
 
             this.dataMode = mode;
             if(!window.location.pathname.includes('dashboard')){
