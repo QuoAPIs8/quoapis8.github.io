@@ -854,7 +854,7 @@ const app = Vue.createApp({
 
 
         getSelectedMedicalCenters(mCs) {
-            if (!mCs || mCs.length === 0) return 'Select one...';
+            if (!mCs || mCs.length === 0) return 'Select one or multiple centers...';
             const centers = this.medicalCenters.filter(center => mCs.includes(center.id));
             return centers.map(center => center.name).join(', ');
         },
