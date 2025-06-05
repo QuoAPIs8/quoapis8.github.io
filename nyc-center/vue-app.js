@@ -1,4 +1,4 @@
-
+// Configuración de Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCoSjpYuQM_vjVyOY3QdeMQCzqymQuJ8K8",
     authDomain: "nyc-cancer-trial---dev.firebaseapp.com",
@@ -8,6 +8,7 @@ const firebaseConfig = {
     appId: "1:567320801353:web:5747ea974fba184466cf98"
 };
 
+// Inicialización de Firebase
 const fApp = firebase.initializeApp(firebaseConfig);
 const db = fApp.firestore();
 const auth = fApp.auth();
@@ -799,6 +800,24 @@ const app = Vue.createApp({
 
         },
 
+        confirmCreateUser(ev) {
+            this.formStatus.errorPassword = false;
+            if(this.dataForm === 'new' && this.formUser.password !== this.formUser.confirmPassword) {
+                this.formStatus.errorPassword = true;
+                return;
+            }
+
+            if(this.dataForm === 'edit') {
+                this.setUser(ev);
+                return;
+            }
+
+            const isValid = this.validateForm();
+            if (!isValid) return;
+            
+            this.confirmPopUp = true;
+        },
+
         goToUser(user) {
             localStorage.setItem('formUser', JSON.stringify(user));
             window.location.href = '/user' + ext;
@@ -846,23 +865,6 @@ const app = Vue.createApp({
             }
         },
 
-        confirmCreateUser(ev) {
-            this.formStatus.errorPassword = false;
-            if(this.dataForm === 'new' && this.formUser.password !== this.formUser.confirmPassword) {
-                this.formStatus.errorPassword = true;
-                return;
-            }
-
-            if(this.dataForm === 'edit') {
-                this.setUser(ev);
-                return;
-            }
-
-            const isValid = this.validateForm();
-            if (!isValid) return;
-            
-            this.confirmPopUp = true;
-        },
 
         async verifyAdmin() {
             if (!auth.currentUser) return;
@@ -1063,3 +1065,4 @@ const app = Vue.createApp({
 });
 
 app.mount('#app');
+
