@@ -53,13 +53,13 @@ const app = Vue.createApp({
                 medicalCenters: [],
             },
             trial: {
-                name: 'Trial 4',
-                sponsors: 'Sponsor 4',
-                nct: 'NCT 4',
-                nct_link: 'NCT Link 4',
-                brief_moa: 'Brief MOA 4',
-                mutation_or_key_biomarker: 'Mutation or Key Biomarker 4',
-                pi_name: 'PI Name 4',
+                name: '',
+                sponsors: '',
+                nct: '',
+                nct_link: '',
+                brief_moa: '',
+                mutation_or_key_biomarker: '',
+                pi_name: '',
                 key_team_contact: ''
             },
             teamMember: {
