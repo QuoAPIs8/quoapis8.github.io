@@ -53,13 +53,13 @@ const app = Vue.createApp({
                 medicalCenters: [],
             },
             trial: {
-                name: '',
-                sponsors: '',
-                nct: '',
-                nct_link: '',
-                brief_moa: '',
-                mutation_or_key_biomarker: '',
-                pi_name: '',
+                name: 'Trial 4',
+                sponsors: 'Sponsor 4',
+                nct: 'NCT 4',
+                nct_link: 'NCT Link 4',
+                brief_moa: 'Brief MOA 4',
+                mutation_or_key_biomarker: 'Mutation or Key Biomarker 4',
+                pi_name: 'PI Name 4',
                 key_team_contact: ''
             },
             teamMember: {
@@ -262,7 +262,7 @@ const app = Vue.createApp({
                 });
         },
 
-        deleteMedicalCenter(ev) {
+        async deleteMedicalCenter(ev) {
             this.sendStatus.success = null;
             this.sendStatus.error = null;
 
@@ -271,8 +271,24 @@ const app = Vue.createApp({
             this.sendStatus.loading = true;
             this.disabledBtn(ev, 'Deleting...');
 
+            var batch = db.batch();
+
+            const medicalCenterTrials = await db.collection('medical_centers').doc(this.center.id).collection('trials').get();
+            const medicalCenterTeamMembers = await db.collection('medical_centers').doc(this.center.id).collection('team_members').get();
+
+            for (let i = 0; i < medicalCenterTrials.docs.length; i++) {
+                const trialDoc = medicalCenterTrials.docs[i];
+                batch.delete(trialDoc.ref);
+            }
+            for (let i = 0; i < medicalCenterTeamMembers.docs.length; i++) {
+                const teamMemberDoc = medicalCenterTeamMembers.docs[i];
+                batch.delete(teamMemberDoc.ref);
+            }
+
             const centerDoc = db.collection('medical_centers').doc(this.center.id);
-            centerDoc.delete()
+            batch.delete(centerDoc);
+
+            batch.commit()
                 .then(() => {
                     this.sendStatus.loading = false;
                     this.sendStatus.success = true;
