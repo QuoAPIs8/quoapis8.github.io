@@ -1,5 +1,3 @@
-/* Estilos para la aplicación Vue */
-
 #app:not([data-v-app]) [data-hide]{
     display: none !important;
 }
@@ -199,10 +197,6 @@ select,
     font-size: 1.2em;
 }
 
-[data-form-validate="true"] input{
-    /* border-bottom-color: red; */
-}
-
 .disabled-btn{
     cursor: not-allowed;
     opacity: .5;
@@ -240,6 +234,14 @@ select,
         flex-basis: .7em;
         flex-shrink: 0;
     }
+}
+
+.input-error, .input-error-url, .input-error + .daf-select-1 {
+    border-bottom-color: red !important;
+}
+
+.input-error-url + .daf-error{
+    display: block;
 }
 
 @media screen and (max-width: 991px) {
