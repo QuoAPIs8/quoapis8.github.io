@@ -59,7 +59,10 @@ const app = Vue.createApp({
                 nct_link: '',
                 brief_moa: '',
                 mutation_or_key_biomarker: '',
-                pi_name: '',
+                pi_name: {
+                    id: '',
+                    name: ''
+                },
                 key_team_contact: ''
             },
             teamMember: {
@@ -74,7 +77,7 @@ const app = Vue.createApp({
                 error: null,
                 success: false,
                 loading: false,
-                mode: 'physician',
+                mode: 'physician'
             },
             formStatus: {
                 error: null,
@@ -95,6 +98,7 @@ const app = Vue.createApp({
             confirmPopUp: false,
             pathname: window.location.pathname.split('/').pop(),
             openUsersList: false,
+            openPINameList: false,
             confirmPassword: '',
             dev: {
                 openNav: false
@@ -357,14 +361,18 @@ const app = Vue.createApp({
                     .get();
                 this.allTrials = trials.docs.map(doc => {
                     let contact = {};
+                    let pi_name = {};
                     let medicalCenter = "";
                     if (doc.data().contact && teamMembers) {
                         contact = teamMembers.find(team => team.id == doc.data().contact.id);
                     }
+                    if (doc.data().pi_name && teamMembers) {
+                        pi_name = teamMembers.find(team => team.id == doc.data().pi_name.id);
+                    }
                     if (doc.ref.parent.parent.id) {
                         medicalCenter = this.medicalCenters.find(center => center.id == doc.ref.parent.parent.id);
                     }
-                    return { id: doc.id, ...doc.data(), contact, medicalCenter };
+                    return { id: doc.id, ...doc.data(), contact, pi_name, medicalCenter };
                 });
             } catch (error) {
                 consoleError("Error getting trials data:", error);
@@ -383,10 +391,14 @@ const app = Vue.createApp({
                 if (doc.docs.length > 0) {
                     this.medicalCenter.trials = await Promise.all(doc.docs.map(async doc => {
                         let contact = {};
+                        let pi_name = {};
                         if (doc.data().contact) {
                             contact = await this.getTeamMember(doc.data().contact);
                         }    
-                        return { id: doc.id, ...doc.data(), contact, key_team_contact: contact.id };
+                        if (doc.data().pi_name) {
+                            pi_name = await this.getTeamMember(doc.data().pi_name);
+                        }
+                        return { id: doc.id, ...doc.data(), contact, pi_name, key_team_contact: contact.id };
                     }));
                 } else {
                     consoleLog("No such document!");
@@ -404,7 +416,7 @@ const app = Vue.createApp({
                     .doc(id).get();
 
                 if (doc.exists) {
-                    this.trial = { id: doc.id, ...doc.data(), key_team_contact: doc.data().contact?.id };
+                    this.trial = { id: doc.id, ...doc.data(), key_team_contact: doc.data().contact?.id, pi_name: doc.data().pi_name };
                 } else {
                     consoleLog("No such document!");
                 }
@@ -442,6 +454,11 @@ const app = Vue.createApp({
             if (that.trial.key_team_contact) {
                 const contactRef = db.collection('team_members').doc(that.trial.key_team_contact);
                 that.trial.contact = contactRef;
+            }
+
+            if (that.trial.pi_name && that.trial.pi_name.id) {
+                const piNameRef = db.collection('team_members').doc(that.trial.pi_name.id);
+                that.trial.pi_name = piNameRef;
             }
 
             const trialDoc = this.dataForm === 'new' ?
@@ -489,6 +506,21 @@ const app = Vue.createApp({
         changeTeamMemberToTrial(teamMemberId) {
             this.trial.key_team_contact = teamMemberId;
             this.openUsersList = false;
+            const select = document.querySelector('select[name="key_team_contact_select"]');
+            if(select){
+                this.formStatus.valid = null;
+                select.classList.remove('input-error');
+            }
+        },
+
+        changePiNameToTrial(teamMember) {
+            this.trial.pi_name = teamMember;
+            this.openPINameList = false;
+            const select = document.querySelector('select[name="pi_name_select"]');
+            if(select){
+                this.formStatus.valid = null;
+                select.classList.remove('input-error');
+            }
         },
 
         getSelectedTeamMember(teamMemberId) {
@@ -909,9 +941,27 @@ const app = Vue.createApp({
             this.formStatus.valid = null;
             
             const form = document.querySelector('[data-form-validate]');
-            const isValid = form.checkValidity();
+            let isValid = form.checkValidity();
             form.classList.add('was-validated');
             this.formStatus.valid = isValid;
+
+            Array.from(form.elements).forEach(el => {
+                el.classList.remove('input-error');
+                el.classList.remove('input-error-url');
+            });
+            Array.from(form.elements).forEach(el => {
+                if (!el.checkValidity()) {
+                    el.classList.add('input-error');
+                }
+
+                if(el.name == 'NCT-Link' && el.value != ''){
+                    const urlPattern = /^(https:\/\/)(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
+                    if (!urlPattern.test(el.value)) {
+                        el.classList.add('input-error-url');
+                        isValid = false;
+                    }
+                }
+            });
 
             return isValid;
         },
@@ -1074,14 +1124,18 @@ const app = Vue.createApp({
                     this.formStatus.valid = null;
                     this.formStatus.errorPassword = false;
                     this.sendStatus.errorPassword = false;
+                    input.classList.remove('input-error');
+                    input.classList.remove('input-error-url');
                 })
             })
             selects.forEach(select => {
                 select.addEventListener('change', () => {
                     this.formStatus.valid = null;
+                    select.classList.remove('input-error');
                 })
             })
         },
+
     },
     mounted() {
         const mode = localStorage.getItem('mode');
