@@ -31,6 +31,7 @@
 
         body {
             overflow: var(--scroll);
+            background-color: #000;
         }
 
         .hme-section-1 {
@@ -341,18 +342,27 @@
                                 ease: "none"
                             },
                             {
-                                duration: 1,
+                                duration: 0.5,
                                 ease: "none",
                                 x: `0%`,
                                 opacity: 1,
                             }
+                        )
+                        .to("section:nth-child(" + (index) + ")",
+                            {
+                                scale: 0.8,
+                                duration: 1,
+                                // opacity: 0.5,
+                            },
+                            "<"
                         )
                         .set("section:nth-child(" + (index) + ")",
                         {
                             opacity: 0,
                             x: "100%",
                             ease: "none",
-                            duration: 0
+                            duration: 0,
+                            scale: 1,
                         })
                         ;
                     break;
@@ -372,16 +382,25 @@
                                 opacity: 1,
                             },
                             {
-                                duration: 1,
+                                duration: 0.5,
                                 ease: "none",
                                 x: `0%`,
                                 opacity: 1,
                             }
                         )
+                        .to("section:nth-child(" + (index + 2) + ")",
+                            {
+                                scale: 0.8,
+                                duration: 1,
+                                // opacity: 0.5,
+                            },
+                            "<"
+                        )
                         .set("section:nth-child(" + (index + 2) + ")",
                             {
                                 x: "100%",
                                 ease: "none",
+                                scale: 1
                             }
                         )
                         .set("section:nth-child(" + (index + 1) + ")",
